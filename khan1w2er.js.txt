@@ -119,7 +119,7 @@ function setupMain() {
             "radio 1": {
               type: "radio",
               options: {
-                choices: [{ content: "W", correct: true }]
+                choices: [{ content: "Wesley o Brabo", correct: true }]
               }
             }
           };

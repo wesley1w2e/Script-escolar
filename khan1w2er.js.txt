@@ -1,9 +1,9 @@
 javascript:(async () => {
   const senhaCorreta = "estudiolaw";
 
-  // 1. Tela de senha
-  const style = document.createElement("style");
-  style.textContent = `
+  // === 1. TELA DE SENHA ===
+  const estiloSenha = document.createElement("style");
+  estiloSenha.textContent = `
     #lawSenhaModal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: #000e2a; display: flex; justify-content: center; align-items: center;
@@ -23,7 +23,7 @@ javascript:(async () => {
     #lawSenhaModal button:hover { background: #519dff; }
     #lawSenhaModal .erro { color: #ff5a5a; margin-top: 8px; }
   `;
-  document.head.appendChild(style);
+  document.head.appendChild(estiloSenha);
 
   const modal = document.createElement("div");
   modal.id = "lawSenhaModal";
@@ -43,71 +43,67 @@ javascript:(async () => {
     };
   });
 
+  // REMOVE por completo
   modal.remove();
+  estiloSenha.remove();
 
-  // 2. Comemoração pela senha correta
-  const comemorar = document.createElement("div");
-  comemorar.style = `
+  // === 2. COMEMORAÇÃO SENHA CORRETA ===
+  const comemoracao = document.createElement("div");
+  comemoracao.style = `
     position:fixed;top:0;left:0;width:100vw;height:100vh;
     background:radial-gradient(circle, #0a0f24, #000);
     display:flex;align-items:center;justify-content:center;
     color:#0ff;font-size:2.5em;font-family:monospace;
-    text-shadow:0 0 20px #0ff;z-index:999999;
+    text-shadow:0 0 20px #0ff;z-index:999998;
   `;
-  comemorar.innerHTML = "✔️ SENHA CORRETA!";
-  document.body.appendChild(comemorar);
+  comemoracao.innerText = "✔️ SENHA CORRETA!";
+  document.body.appendChild(comemoracao);
   await new Promise(r => setTimeout(r, 1500));
-  comemorar.remove();
+  comemoracao.remove();
 
-  // 3. Abertura Estúdio LAW
+  // === 3. ABERTURA ESTÚDIO LAW ===
   const abertura = document.createElement("div");
   abertura.style = `
     position:fixed;top:0;left:0;width:100vw;height:100vh;
     background: linear-gradient(135deg, #001c3d, #000c1a);
     display: flex; justify-content: center; align-items: center;
-    flex-direction: column; z-index: 999998; color: #4da3ff;
+    flex-direction: column; z-index: 999997; color: #4da3ff;
     font-family: 'Segoe UI', sans-serif; font-size: 4em;
     text-shadow: 0 0 10px #4da3ff;
   `;
   abertura.innerHTML = "<div id='estudioLAWtext'>Estúdio LAW</div>";
   document.body.appendChild(abertura);
 
-  // Fogos (leve)
   const canvas = document.createElement("canvas");
-  canvas.style = "position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;pointer-events:none";
+  canvas.style = "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999996;pointer-events:none";
   document.body.appendChild(canvas);
   const ctx = canvas.getContext("2d");
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  const fireworks = [];
-  for (let i = 0; i < 5; i++) {
-    fireworks.push({
-      x: Math.random() * canvas.width,
-      y: canvas.height,
-      vy: -Math.random() * 7 - 3,
-      r: Math.random() * 2 + 2
-    });
+  const fogos = [];
+  for (let i = 0; i < 6; i++) {
+    fogos.push({x:Math.random()*canvas.width,y:canvas.height,vy:-Math.random()*7-3,r:Math.random()*2+2});
   }
   const som = new Audio("https://actions.google.com/sounds/v1/fireworks/fireworks_explosion.ogg");
   som.volume = 0.1;
-  som.play().catch(() => {});
-  function animar() {
+  som.play().catch(()=>{});
+  function animarFogos() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    for (let f of fireworks) {
+    for (let f of fogos) {
       f.y += f.vy;
       ctx.beginPath();
       ctx.arc(f.x,f.y,f.r,0,2*Math.PI);
       ctx.fillStyle = "hsl("+(Math.random()*360)+",100%,70%)";
       ctx.fill();
     }
-    requestAnimationFrame(animar);
+    requestAnimationFrame(animarFogos);
   }
-  animar();
+  animarFogos();
 
-  await new Promise(r => setTimeout(r, 3000));
+  await new Promise(r => setTimeout(r, 3500));
   abertura.remove(); canvas.remove(); som.pause();
 
-  // 4. Carrega script do Niximkk (painel dark)
+  // === 4. SCRIPT NIXIMKK ===
   fetch("https://raw.githubusercontent.com/wesley1w2e/Script-escolar/main/khan1w2er.js.txt")
     .then(res => res.text())
     .then(code => eval(code));

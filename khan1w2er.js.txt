@@ -1,235 +1,377 @@
-// Script desenvolvido por Wesley1w2e
+// Script completo com sistema de senha + fogos + script de automação original
 
-const script = document.createElement('script');
-script.src = 'https://cdn.jsdelivr.net/gh/DarkModde/Dark-Scripts/ProtectionScript.js';
-document.head.appendChild(script);
+(function() {
+  // 1. Tela de senha e fogos
+  const senhasPermitidas = [
+    "estudiolaw123", "lawdev2025", "chakraazul", "darklawforce",
+    "brabolawx", "fogueteazul", "khanlawbr", "segredo123",
+    "acessolaw", "powerlaw"
+  ];
 
-let loadedPlugins = [];
-
-console.clear();
-const noop = () => {};
-console.warn = console.error = window.debug = noop;
-
-const splashScreen = document.createElement('div');
-
-class EventEmitter {
-  constructor() { this.events = {}; }
-  on(t, e) { (Array.isArray(t) ? t : [t]).forEach(t => { (this.events[t] = this.events[t] || []).push(e); }); }
-  off(t, e) { (Array.isArray(t) ? t : [t]).forEach(t => { if(this.events[t]) this.events[t] = this.events[t].filter(h => h !== e); }); }
-  emit(t, ...e) { this.events[t]?.forEach(h => h(...e)); }
-  once(t, e) {
-    const s = (...i) => { e(...i); this.off(t, s); };
-    this.on(t, s);
-  }
-}
-
-const plppdo = new EventEmitter();
-
-new MutationObserver(mutationsList => {
-  if (mutationsList.some(m => m.type === 'childList')) {
-    plppdo.emit('domChanged');
-  }
-}).observe(document.body, { childList: true, subtree: true });
-
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-const findAndClickBySelector = selector => document.querySelector(selector)?.click();
-
-function sendToast(text, duration = 5000, gravity = 'bottom') {
-  Toastify({
-    text,
-    duration,
-    gravity,
-    position: "center",
-    stopOnFocus: true,
-    style: { background: "#000000" }
-  }).showToast();
-}
-
-async function showSplashScreen() {
-  splashScreen.style.cssText = `
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(to top, #3b1700 0%, #000000 70%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    user-select: none;
-    z-index: 9999;
-    color: #ff6600;
-    font-family: MuseoSans, sans-serif;
-    font-size: 48px;
-    letter-spacing: 0.15em;
-    text-shadow:
-      0 0 8px #ff6600,
-      0 0 15px #ff6600,
-      0 0 30px #ff6600;
-    opacity: 1;
-    transition: opacity 1s ease;
+  const telaSenha = document.createElement('div');
+  telaSenha.innerHTML = `
+    <style>
+      #telaSenha {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: radial-gradient(circle at center, #004488, #000022);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999;
+        color: white;
+        font-family: sans-serif;
+      }
+      #senhaInput {
+        padding: 10px; font-size: 18px;
+        border: none; border-radius: 8px;
+        outline: none; margin-top: 10px;
+      }
+      #entrarBtn {
+        margin-top: 10px; padding: 10px 20px;
+        background: #00aaff; border: none;
+        border-radius: 8px; color: white;
+        font-weight: bold; cursor: pointer;
+        transition: background 0.3s;
+      }
+      #entrarBtn:hover { background: #0080cc; }
+    </style>
+    <div id="telaSenha">
+      <h2>\uD83D\uDD10 \u00C1rea Protegida</h2>
+      <p>Digite a senha para continuar:</p>
+      <input type="password" id="senhaInput" placeholder="Senha..." />
+      <button id="entrarBtn">Entrar</button>
+    </div>
   `;
+  document.body.appendChild(telaSenha);
 
-  splashScreen.textContent = '';
-  document.body.appendChild(splashScreen);
+  const canvas = document.createElement('canvas');
+  canvas.id = 'fogosCanvas';
+  canvas.style = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:999998;pointer-events:none;';
+  document.body.appendChild(canvas);
 
-  const text = 'Estúdio LAW';
-  let index = 0;
+  const input = document.getElementById("senhaInput");
+  const btn = document.getElementById("entrarBtn");
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const fireworks = [];
 
-  return new Promise(resolve => {
-    const interval = setInterval(() => {
-      splashScreen.textContent = text.slice(0, index + 1);
-      index++;
-      if (index === text.length) {
-        clearInterval(interval);
-        setTimeout(() => {
-          splashScreen.style.opacity = '0';
-          setTimeout(() => {
-            splashScreen.remove();
-            resolve();
-          }, 1000);
-        }, 2000);
-      }
-    }, 150);
-  });
-}
+  function Firework() {
+    this.x = Math.random() * canvas.width;
+    this.y = canvas.height;
+    this.targetY = Math.random() * (canvas.height / 2);
+    this.exploded = false;
+    this.particles = [];
 
-async function hideSplashScreen() {
-  splashScreen.style.opacity = '0';
-  setTimeout(() => splashScreen.remove(), 1000);
-}
-
-async function loadScript(url, label) {
-  const response = await fetch(url);
-  const scriptText = await response.text();
-  loadedPlugins.push(label);
-  eval(scriptText);
-}
-
-async function loadCss(url) {
-  return new Promise(resolve => {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.type = 'text/css';
-    link.href = url;
-    link.onload = resolve;
-    document.head.appendChild(link);
-  });
-}
-
-function setupMain() {
-  const originalFetch = window.fetch;
-
-  window.fetch = async function(input, init) {
-    let body;
-    if (input instanceof Request) {
-      body = await input.clone().text();
-    } else if (init?.body) {
-      body = init.body;
-    }
-
-    if (body?.includes('"operationName":"updateUserVideoProgress"')) {
-      try {
-        let bodyObj = JSON.parse(body);
-        if (bodyObj.variables?.input) {
-          const durationSeconds = bodyObj.variables.input.durationSeconds;
-          bodyObj.variables.input.secondsWatched = durationSeconds;
-          bodyObj.variables.input.lastSecondWatched = durationSeconds;
-          body = JSON.stringify(bodyObj);
-
-          if (input instanceof Request) {
-            input = new Request(input, { body });
-          } else {
-            init.body = body;
+    this.update = () => {
+      if (!this.exploded) {
+        this.y -= 4;
+        if (this.y <= this.targetY) {
+          this.exploded = true;
+          for (let i = 0; i < 30; i++) {
+            this.particles.push(new Particle(this.x, this.y));
           }
-
-          sendToast("🔓┃Vídeo explorado.", 1000);
-        }
-      } catch (e) { /* erro ignorado */ }
-    }
-
-    const originalResponse = await originalFetch.apply(this, arguments);
-
-    try {
-      const clonedResponse = originalResponse.clone();
-      const responseBody = await clonedResponse.text();
-      let responseObj = JSON.parse(responseBody);
-
-      if (responseObj?.data?.assessmentItem?.item?.itemData) {
-        let itemData = JSON.parse(responseObj.data.assessmentItem.item.itemData);
-
-        if (itemData.question.content[0] === itemData.question.content[0].toUpperCase()) {
-          itemData.answerArea = {
-            calculator: false,
-            chi2Table: false,
-            periodicTable: false,
-            tTable: false,
-            zTable: false
-          };
-
-          itemData.question.content = " " + `[[☃ radio 1]]`;
-          itemData.question.widgets = {
-            "radio 1": {
-              type: "radio",
-              options: {
-                choices: [{ content: "Wesley o Brabo", correct: true }]
-              }
-            }
-          };
-
-          responseObj.data.assessmentItem.item.itemData = JSON.stringify(itemData);
-
-          return new Response(JSON.stringify(responseObj), {
-            status: originalResponse.status,
-            statusText: originalResponse.statusText,
-            headers: originalResponse.headers
-          });
         }
       }
-    } catch (e) { /* erro ignorado */ }
+      this.particles.forEach(p => p.update());
+    };
+    this.draw = () => {
+      if (!this.exploded) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "white";
+        ctx.fill();
+      }
+      this.particles.forEach(p => p.draw());
+    };
+  }
 
-    return originalResponse;
+  function Particle(x, y) {
+    this.x = x;
+    this.y = y;
+    this.dx = (Math.random() - 0.5) * 6;
+    this.dy = (Math.random() - 0.5) * 6;
+    this.life = 60;
+
+    this.update = () => {
+      this.x += this.dx;
+      this.y += this.dy;
+      this.dy += 0.05;
+      this.life--;
+    };
+    this.draw = () => {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0, 170, 255, ${this.life / 60})`;
+      ctx.fill();
+    };
+  }
+
+  function loopFogos() {
+    requestAnimationFrame(loopFogos);
+    ctx.fillStyle = "rgba(0, 0, 34, 0.2)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (Math.random() < 0.05) fireworks.push(new Firework());
+    fireworks.forEach(fw => { fw.update(); fw.draw(); });
+  }
+
+  btn.onclick = () => {
+    if (senhasPermitidas.includes(input.value)) {
+      loopFogos();
+      telaSenha.remove();
+      setTimeout(() => {
+        canvas.remove();
+        startScriptCompleto();
+      }, 4000);
+    } else {
+      alert("Senha incorreta!");
+    }
   };
 
-  (async () => {
-    const selectors = [
-      `[data-testid="choice-icon__library-choice-icon"]`,
-      `[data-testid="exercise-check-answer"]`,
-      `[data-testid="exercise-next-question"]`,
-      `._1udzurba`,
-      `._awve9b`
-    ];
+  // 2. Seu script original completo
+  function startScriptCompleto() {
+    // Colei abaixo seu script original inteiro com tarefas automáticas
+    // (o código continua exatamente como você enviou)
 
-    window.khanwareDominates = true;
+    // --- INÍCIO DO SCRIPT ORIGINAL DO USUÁRIO ---
 
-    while (window.khanwareDominates) {
-      for (const selector of selectors) {
-        findAndClickBySelector(selector);
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/gh/DarkModde/Dark-Scripts/ProtectionScript.js';
+    document.head.appendChild(script);
 
-        const element = document.querySelector(`${selector} > div`);
-        if (element?.innerText === "Mostrar resumo") {
-          sendToast("🎉┃Exercício concluído!", 3000);
-        }
-      }
-      await delay(800);
-    }
-  })();
-}
+    let loadedPlugins = [];
 
-if (!/^https?:\/\/([a-z0-9-]+\.)?khanacademy\.org/.test(window.location.href)) {
-  window.location.href = "https://pt.khanacademy.org/";
-} else {
-  (async function init() {
-    await showSplashScreen();
-
-    await Promise.all([
-      loadScript('https://cdn.jsdelivr.net/npm/darkreader/darkreader.min.js','darkReaderPlugin').then(() => { DarkReader.setFetchMethod(window.fetch); DarkReader.enable(); }),
-      loadCss('https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css'),
-      loadScript('https://cdn.jsdelivr.net/npm/toastify-js', 'toastifyPlugin'),
-    ]);
-
-    await delay(2000);
-    await hideSplashScreen();
-
-    setupMain();
-    sendToast("🍀┃KhanResolver iniciado!");
     console.clear();
-  })();
-}
+    const noop = () => {};
+    console.warn = console.error = window.debug = noop;
+
+    const splashScreen = document.createElement('div');
+
+    class EventEmitter {
+      constructor() { this.events = {}; }
+      on(t, e) { (Array.isArray(t) ? t : [t]).forEach(t => { (this.events[t] = this.events[t] || []).push(e); }); }
+      off(t, e) { (Array.isArray(t) ? t : [t]).forEach(t => { if(this.events[t]) this.events[t] = this.events[t].filter(h => h !== e); }); }
+      emit(t, ...e) { this.events[t]?.forEach(h => h(...e)); }
+      once(t, e) {
+        const s = (...i) => { e(...i); this.off(t, s); };
+        this.on(t, s);
+      }
+    }
+
+    const plppdo = new EventEmitter();
+
+    new MutationObserver(mutationsList => {
+      if (mutationsList.some(m => m.type === 'childList')) {
+        plppdo.emit('domChanged');
+      }
+    }).observe(document.body, { childList: true, subtree: true });
+
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    const findAndClickBySelector = selector => document.querySelector(selector)?.click();
+
+    function sendToast(text, duration = 5000, gravity = 'bottom') {
+      Toastify({
+        text,
+        duration,
+        gravity,
+        position: "center",
+        stopOnFocus: true,
+        style: { background: "#000000" }
+      }).showToast();
+    }
+
+    async function showSplashScreen() {
+      splashScreen.style.cssText = `
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(to top, #3b1700 0%, #000000 70%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        user-select: none;
+        z-index: 9999;
+        color: #ff6600;
+        font-family: MuseoSans, sans-serif;
+        font-size: 48px;
+        letter-spacing: 0.15em;
+        text-shadow:
+          0 0 8px #ff6600,
+          0 0 15px #ff6600,
+          0 0 30px #ff6600;
+        opacity: 1;
+        transition: opacity 1s ease;
+      `;
+
+      splashScreen.textContent = '';
+      document.body.appendChild(splashScreen);
+
+      const text = 'Estúdio LAW';
+      let index = 0;
+
+      return new Promise(resolve => {
+        const interval = setInterval(() => {
+          splashScreen.textContent = text.slice(0, index + 1);
+          index++;
+          if (index === text.length) {
+            clearInterval(interval);
+            setTimeout(() => {
+              splashScreen.style.opacity = '0';
+              setTimeout(() => {
+                splashScreen.remove();
+                resolve();
+              }, 1000);
+            }, 2000);
+          }
+        }, 150);
+      });
+    }
+
+    async function hideSplashScreen() {
+      splashScreen.style.opacity = '0';
+      setTimeout(() => splashScreen.remove(), 1000);
+    }
+
+    async function loadScript(url, label) {
+      const response = await fetch(url);
+      const scriptText = await response.text();
+      loadedPlugins.push(label);
+      eval(scriptText);
+    }
+
+    async function loadCss(url) {
+      return new Promise(resolve => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = url;
+        link.onload = resolve;
+        document.head.appendChild(link);
+      });
+    }
+
+    function setupMain() {
+      const originalFetch = window.fetch;
+
+      window.fetch = async function(input, init) {
+        let body;
+        if (input instanceof Request) {
+          body = await input.clone().text();
+        } else if (init?.body) {
+          body = init.body;
+        }
+
+        if (body?.includes('"operationName":"updateUserVideoProgress"')) {
+          try {
+            let bodyObj = JSON.parse(body);
+            if (bodyObj.variables?.input) {
+              const durationSeconds = bodyObj.variables.input.durationSeconds;
+              bodyObj.variables.input.secondsWatched = durationSeconds;
+              bodyObj.variables.input.lastSecondWatched = durationSeconds;
+              body = JSON.stringify(bodyObj);
+
+              if (input instanceof Request) {
+                input = new Request(input, { body });
+              } else {
+                init.body = body;
+              }
+
+              sendToast("\uD83D\uDD13\u2753\u2503Vídeo explorado.", 1000);
+            }
+          } catch (e) { /* erro ignorado */ }
+        }
+
+        const originalResponse = await originalFetch.apply(this, arguments);
+
+        try {
+          const clonedResponse = originalResponse.clone();
+          const responseBody = await clonedResponse.text();
+          let responseObj = JSON.parse(responseBody);
+
+          if (responseObj?.data?.assessmentItem?.item?.itemData) {
+            let itemData = JSON.parse(responseObj.data.assessmentItem.item.itemData);
+
+            if (itemData.question.content[0] === itemData.question.content[0].toUpperCase()) {
+              itemData.answerArea = {
+                calculator: false,
+                chi2Table: false,
+                periodicTable: false,
+                tTable: false,
+                zTable: false
+              };
+
+              itemData.question.content = " " + `[[☃ radio 1]]`;
+              itemData.question.widgets = {
+                "radio 1": {
+                  type: "radio",
+                  options: {
+                    choices: [{ content: "Wesley o Brabo", correct: true }]
+                  }
+                }
+              };
+
+              responseObj.data.assessmentItem.item.itemData = JSON.stringify(itemData);
+
+              return new Response(JSON.stringify(responseObj), {
+                status: originalResponse.status,
+                statusText: originalResponse.statusText,
+                headers: originalResponse.headers
+              });
+            }
+          }
+        } catch (e) { /* erro ignorado */ }
+
+        return originalResponse;
+      };
+
+      (async () => {
+        const selectors = [
+          `[data-testid="choice-icon__library-choice-icon"]`,
+          `[data-testid="exercise-check-answer"]`,
+          `[data-testid="exercise-next-question"]`,
+          `._1udzurba`,
+          `._awve9b`
+        ];
+
+        window.khanwareDominates = true;
+
+        while (window.khanwareDominates) {
+          for (const selector of selectors) {
+            findAndClickBySelector(selector);
+
+            const element = document.querySelector(`${selector} > div`);
+            if (element?.innerText === "Mostrar resumo") {
+              sendToast("\uD83C\uDF89\u2503Exercício concluído!", 3000);
+            }
+          }
+          await delay(800);
+        }
+      })();
+    }
+
+    if (!/^https?:\/\/([a-z0-9-]+\.)?khanacademy\.org/.test(window.location.href)) {
+      window.location.href = "https://pt.khanacademy.org/";
+    } else {
+      (async function init() {
+        await showSplashScreen();
+
+        await Promise.all([
+          loadScript('https://cdn.jsdelivr.net/npm/darkreader/darkreader.min.js','darkReaderPlugin').then(() => { DarkReader.setFetchMethod(window.fetch); DarkReader.enable(); }),
+          loadCss('https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css'),
+          loadScript('https://cdn.jsdelivr.net/npm/toastify-js', 'toastifyPlugin'),
+        ]);
+
+        await delay(2000);
+        await hideSplashScreen();
+
+        setupMain();
+        sendToast("\uD83C\uDF40\u2503KhanResolver iniciado!");
+        console.clear();
+      })();
+    }
+
+    // --- FIM DO SCRIPT ORIGINAL DO USUÁRIO ---
+  }
+})();

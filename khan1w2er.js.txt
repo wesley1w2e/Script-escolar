@@ -1,848 +1,263 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KhanResolver - Sistema Protegido</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+// ==UserScript==
+// @name         KhanResolver LAW - Sistema Protegido
+// @namespace    https://github.com/wesley1w2e/
+// @version      1.0
+// @description  Sistema de senha animado, comemoração e splash para scripts na Khan Academy
+// @author       Wesley1w2e
+// @match        *://*.khanacademy.org/*
+// @grant        none
+// ==/UserScript==
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-            background: #000;
-        }
+(function() {
+    'use strict';
 
-        /* Sistema de Senha */
-        .password-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #0f0f0f, #1a1a1a, #0f0f0f);
-            background-size: 400% 400%;
-            animation: gradientShift 6s ease infinite;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
+    // ----------- CSS -----------
+    const style = document.createElement('style');
+    style.textContent = `
+        * {margin:0;padding:0;box-sizing:border-box;}
+        body {font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;overflow:hidden;background:#000;}
+        .password-container {position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(45deg,#0f0f0f,#1a1a1a,#0f0f0f);background-size:400% 400%;animation:gradientShift 6s ease infinite;display:flex;justify-content:center;align-items:center;z-index:10000;}
+        @keyframes gradientShift {0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+        .password-panel {background:rgba(0,0,0,0.9);backdrop-filter:blur(20px);border:2px solid rgba(255,102,0,0.3);border-radius:20px;padding:40px;box-shadow:0 0 50px rgba(255,102,0,0.2),inset 0 0 50px rgba(255,102,0,0.1);animation:panelGlow 3s ease-in-out infinite alternate;min-width:400px;text-align:center;}
+        @keyframes panelGlow {0%{box-shadow:0 0 30px rgba(255,102,0,0.2),inset 0 0 30px rgba(255,102,0,0.1);}100%{box-shadow:0 0 60px rgba(255,102,0,0.4),inset 0 0 60px rgba(255,102,0,0.2);}}
+        .password-title {color:#ff6600;font-size:28px;font-weight:bold;margin-bottom:10px;text-shadow:0 0 20px #ff6600;animation:titlePulse 2s ease-in-out infinite;}
+        @keyframes titlePulse {0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+        .password-subtitle {color:#aaa;font-size:14px;margin-bottom:30px;opacity:0.8;}
+        .password-input {width:100%;padding:15px;font-size:16px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,102,0,0.3);border-radius:10px;color:#fff;outline:none;margin-bottom:20px;transition:all 0.3s ease;}
+        .password-input:focus {border-color:#ff6600;box-shadow:0 0 20px rgba(255,102,0,0.5);transform:scale(1.02);}
+        .password-btn {width:100%;padding:15px;font-size:16px;font-weight:bold;background:linear-gradient(45deg,#ff6600,#ff8833);border:none;border-radius:10px;color:#fff;cursor:pointer;transition:all 0.3s ease;text-transform:uppercase;letter-spacing:1px;}
+        .password-btn:hover {transform:translateY(-2px);box-shadow:0 10px 20px rgba(255,102,0,0.3);}
+        .password-error {color:#ff4444;font-size:14px;margin-top:10px;opacity:0;transition:opacity 0.3s ease;}
+        .password-error.show {opacity:1;animation:shake 0.5s ease-in-out;}
+        @keyframes shake {0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+        .celebration-screen {position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(45deg,#000428,#004e92);display:none;justify-content:center;align-items:center;z-index:9999;overflow:hidden;}
+        .celebration-content {text-align:center;z-index:2;}
+        .celebration-title {font-size:48px;font-weight:bold;color:#fff;text-shadow:0 0 30px #fff;margin-bottom:20px;animation:celebrationPulse 1.5s ease-in-out infinite;}
+        .celebration-subtitle {font-size:24px;color:#ffaa00;text-shadow:0 0 20px #ffaa00;animation:subtitleGlow 2s ease-in-out infinite;}
+        @keyframes celebrationPulse {0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+        @keyframes subtitleGlow {0%,100%{opacity:0.8;}50%{opacity:1;}}
+        .firework {position:absolute;width:4px;height:4px;border-radius:50%;animation:fireworkLaunch 2s ease-out forwards;}
+        @keyframes fireworkLaunch {0%{transform:translateY(100vh) scale(0);opacity:1;}70%{transform:translateY(-50vh) scale(1);opacity:1;}100%{transform:translateY(-60vh) scale(0);opacity:0;}}
+        .firework-particle {position:absolute;width:3px;height:3px;border-radius:50%;}
+        .law-splash {position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#001122 0%,#003366 25%,#001122 50%,#000000 100%);background-size:400% 400%;animation:lawGradient 8s ease infinite;display:none;justify-content:center;align-items:center;z-index:9998;color:#00aaff;font-family:'Arial',sans-serif;font-size:64px;font-weight:bold;letter-spacing:4px;text-shadow:0 0 10px #00aaff,0 0 20px #00aaff,0 0 40px #00aaff,0 0 80px #00aaff;overflow:hidden;}
+        @keyframes lawGradient {0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+        .law-text {animation:lawTextAnimation 3s ease-in-out;position:relative;}
+        @keyframes lawTextAnimation {0%{transform:scale(0) rotate(-180deg);opacity:0;}50%{transform:scale(1.2) rotate(0deg);opacity:1;}100%{transform:scale(1) rotate(0deg);opacity:1;}}
+        .floating-particle {position:absolute;width:2px;height:2px;background:#00aaff;border-radius:50%;animation:float 6s linear infinite;opacity:0.6;}
+        @keyframes float {0%{transform:translateY(100vh) translateX(0px);opacity:0;}10%{opacity:0.6;}90%{opacity:0.6;}100%{transform:translateY(-100px) translateX(100px);opacity:0;}}
+        .law-firework {position:absolute;width:3px;height:3px;background:#00aaff;border-radius:50%;box-shadow:0 0 10px #00aaff;}
+        .loading-bar {position:absolute;bottom:50px;left:50%;transform:translateX(-50%);width:300px;height:4px;background:rgba(0,170,255,0.2);border-radius:2px;overflow:hidden;}
+        .loading-progress {height:100%;background:linear-gradient(90deg,#00aaff,#0088cc);border-radius:2px;animation:loadingProgress 4s ease-in-out forwards;box-shadow:0 0 10px #00aaff;}
+        @keyframes loadingProgress {0%{width:0%;}100%{width:100%;}}
+    `;
+    document.head.appendChild(style);
 
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        .password-panel {
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(20px);
-            border: 2px solid rgba(255, 102, 0, 0.3);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 
-                0 0 50px rgba(255, 102, 0, 0.2),
-                inset 0 0 50px rgba(255, 102, 0, 0.1);
-            animation: panelGlow 3s ease-in-out infinite alternate;
-            min-width: 400px;
-            text-align: center;
-        }
-
-        @keyframes panelGlow {
-            0% { box-shadow: 0 0 30px rgba(255, 102, 0, 0.2), inset 0 0 30px rgba(255, 102, 0, 0.1); }
-            100% { box-shadow: 0 0 60px rgba(255, 102, 0, 0.4), inset 0 0 60px rgba(255, 102, 0, 0.2); }
-        }
-
-        .password-title {
-            color: #ff6600;
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px #ff6600;
-            animation: titlePulse 2s ease-in-out infinite;
-        }
-
-        @keyframes titlePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .password-subtitle {
-            color: #aaa;
-            font-size: 14px;
-            margin-bottom: 30px;
-            opacity: 0.8;
-        }
-
-        .password-input {
-            width: 100%;
-            padding: 15px;
-            font-size: 16px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 102, 0, 0.3);
-            border-radius: 10px;
-            color: #fff;
-            outline: none;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .password-input:focus {
-            border-color: #ff6600;
-            box-shadow: 0 0 20px rgba(255, 102, 0, 0.5);
-            transform: scale(1.02);
-        }
-
-        .password-btn {
-            width: 100%;
-            padding: 15px;
-            font-size: 16px;
-            font-weight: bold;
-            background: linear-gradient(45deg, #ff6600, #ff8833);
-            border: none;
-            border-radius: 10px;
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .password-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255, 102, 0, 0.3);
-        }
-
-        .password-error {
-            color: #ff4444;
-            font-size: 14px;
-            margin-top: 10px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .password-error.show {
-            opacity: 1;
-            animation: shake 0.5s ease-in-out;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        /* Tela de Comemoração */
-        .celebration-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #000428, #004e92);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            overflow: hidden;
-        }
-
-        .celebration-content {
-            text-align: center;
-            z-index: 2;
-        }
-
-        .celebration-title {
-            font-size: 48px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 0 30px #fff;
-            margin-bottom: 20px;
-            animation: celebrationPulse 1.5s ease-in-out infinite;
-        }
-
-        .celebration-subtitle {
-            font-size: 24px;
-            color: #ffaa00;
-            text-shadow: 0 0 20px #ffaa00;
-            animation: subtitleGlow 2s ease-in-out infinite;
-        }
-
-        @keyframes celebrationPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        @keyframes subtitleGlow {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
-        }
-
-        /* Fogos de Artifício */
-        .firework {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            animation: fireworkLaunch 2s ease-out forwards;
-        }
-
-        @keyframes fireworkLaunch {
-            0% {
-                transform: translateY(100vh) scale(0);
-                opacity: 1;
-            }
-            70% {
-                transform: translateY(-50vh) scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-60vh) scale(0);
-                opacity: 0;
-            }
-        }
-
-        .firework-explosion {
-            position: absolute;
-            pointer-events: none;
-        }
-
-        .firework-particle {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            border-radius: 50%;
-        }
-
-        /* Splash Screen do Estúdio LAW */
-        .law-splash {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #001122 0%, #003366 25%, #001122 50%, #000000 100%);
-            background-size: 400% 400%;
-            animation: lawGradient 8s ease infinite;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9998;
-            color: #00aaff;
-            font-family: 'Arial', sans-serif;
-            font-size: 64px;
-            font-weight: bold;
-            letter-spacing: 4px;
-            text-shadow: 
-                0 0 10px #00aaff,
-                0 0 20px #00aaff,
-                0 0 40px #00aaff,
-                0 0 80px #00aaff;
-            overflow: hidden;
-        }
-
-        @keyframes lawGradient {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        .law-text {
-            animation: lawTextAnimation 3s ease-in-out;
-            position: relative;
-        }
-
-        @keyframes lawTextAnimation {
-            0% {
-                transform: scale(0) rotate(-180deg);
-                opacity: 0;
-            }
-            50% {
-                transform: scale(1.2) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(1) rotate(0deg);
-                opacity: 1;
-            }
-        }
-
-        /* Partículas flutuantes */
-        .floating-particle {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: #00aaff;
-            border-radius: 50%;
-            animation: float 6s linear infinite;
-            opacity: 0.6;
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(100vh) translateX(0px);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.6;
-            }
-            90% {
-                opacity: 0.6;
-            }
-            100% {
-                transform: translateY(-100px) translateX(100px);
-                opacity: 0;
-            }
-        }
-
-        /* Efeitos especiais para LAW */
-        .law-firework {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            background: #00aaff;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #00aaff;
-        }
-
-        .loading-bar {
-            position: absolute;
-            bottom: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 300px;
-            height: 4px;
-            background: rgba(0, 170, 255, 0.2);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .loading-progress {
-            height: 100%;
-            background: linear-gradient(90deg, #00aaff, #0088cc);
-            border-radius: 2px;
-            animation: loadingProgress 4s ease-in-out forwards;
-            box-shadow: 0 0 10px #00aaff;
-        }
-
-        @keyframes loadingProgress {
-            0% { width: 0%; }
-            100% { width: 100%; }
-        }
-    </style>
-</head>
-<body>
-    <!-- Sistema de Senha -->
-    <div class="password-container" id="passwordContainer">
-        <div class="password-panel">
-            <div class="password-title">🔐 ACESSO RESTRITO</div>
-            <div class="password-subtitle">Sistema Protegido - Digite a senha</div>
-            <input type="password" class="password-input" id="passwordInput" placeholder="Digite sua senha..." maxlength="20">
-            <button class="password-btn" onclick="checkPassword()">ACESSAR SISTEMA</button>
-            <div class="password-error" id="passwordError">Senha incorreta! Tente novamente.</div>
+    // ----------- HTML -----------
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="password-container" id="passwordContainer">
+            <div class="password-panel">
+                <div class="password-title">🔐 ACESSO RESTRITO</div>
+                <div class="password-subtitle">Sistema Protegido - Digite a senha</div>
+                <input type="password" class="password-input" id="passwordInput" placeholder="Digite sua senha..." maxlength="20">
+                <button class="password-btn" id="btnAcessar">ACESSAR SISTEMA</button>
+                <div class="password-error" id="passwordError">Senha incorreta! Tente novamente.</div>
+            </div>
         </div>
-    </div>
-
-    <!-- Tela de Comemoração -->
-    <div class="celebration-screen" id="celebrationScreen">
-        <div class="celebration-content">
-            <div class="celebration-title">🎉 PARABÉNS! 🎉</div>
-            <div class="celebration-subtitle">O Script é Seu!</div>
+        <div class="celebration-screen" id="celebrationScreen">
+            <div class="celebration-content">
+                <div class="celebration-title">🎉 PARABÉNS! 🎉</div>
+                <div class="celebration-subtitle">O Script é Seu!</div>
+            </div>
         </div>
-    </div>
-
-    <!-- Splash Screen Estúdio LAW -->
-    <div class="law-splash" id="lawSplash">
-        <div class="law-text" id="lawText"></div>
-        <div class="loading-bar">
-            <div class="loading-progress"></div>
+        <div class="law-splash" id="lawSplash">
+            <div class="law-text" id="lawText"></div>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
         </div>
-    </div>
+    `);
 
-    <script>
-        // ======================================
-        // CONFIGURAÇÃO DO SISTEMA - EDITE AQUI
-        // ======================================
-        const SYSTEM_PASSWORD = "estudiolaw123"; // Senha principal do sistema
-        const SCRIPT_AUTHOR = "Wesley1w2e"; // Autor do script
-        // ======================================
-        // Proteção contra ferramentas de desenvolvedor
-        (function() {
-            'use strict';
-            
-            // Bloquear F12, Ctrl+Shift+I, Ctrl+U, etc.
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'F12' || 
-                    (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-                    (e.ctrlKey && e.shiftKey && e.key === 'J') ||
-                    (e.ctrlKey && e.key === 'U')) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-
-            // Detectar DevTools
-            let devtools = {open: false, orientation: null};
-            const threshold = 160;
-
-            setInterval(() => {
-                if (window.outerHeight - window.innerHeight > threshold || 
-                    window.outerWidth - window.innerWidth > threshold) {
-                    if (!devtools.open) {
-                        devtools.open = true;
-                        document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#000;color:#ff0000;font-size:24px;font-weight:bold;">⚠️ ACESSO BLOQUEADO ⚠️</div>';
-                    }
-                }
-            }, 500);
-
-            // Bloquear clique direito
-            document.addEventListener('contextmenu', e => e.preventDefault());
-        })();
-
-        function checkPassword() {
-            const input = document.getElementById('passwordInput');
-            const error = document.getElementById('passwordError');
-            
-            if (input.value === SYSTEM_PASSWORD) {
-                showCelebration();
-            } else {
-                error.classList.add('show');
-                input.style.borderColor = '#ff4444';
-                setTimeout(() => {
-                    error.classList.remove('show');
-                    input.style.borderColor = 'rgba(255, 102, 0, 0.3)';
-                }, 2000);
-            }
-            input.value = '';
-        }
-
-        // Enter para submeter
-        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                checkPassword();
+    // ----------- BLOQUEIO DEVTOOLS -----------
+    (function() {
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' ||
+                (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+                (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
+                return false;
             }
         });
-
-        // Tela de comemoração com fogos
-        function showCelebration() {
-            document.getElementById('passwordContainer').style.display = 'none';
-            const celebration = document.getElementById('celebrationScreen');
-            celebration.style.display = 'flex';
-            
-            // Criar fogos de artifício
-            for (let i = 0; i < 15; i++) {
-                setTimeout(() => createFirework(), i * 200);
-            }
-            
-            // Ir para splash do LAW após 4 segundos
-            setTimeout(() => {
-                celebration.style.display = 'none';
-                showLawSplash();
-            }, 4000);
-        }
-
-        function createFirework() {
-            const firework = document.createElement('div');
-            firework.className = 'firework';
-            firework.style.left = Math.random() * window.innerWidth + 'px';
-            firework.style.background = getRandomColor();
-            firework.style.boxShadow = `0 0 10px ${firework.style.background}`;
-            
-            document.getElementById('celebrationScreen').appendChild(firework);
-            
-            setTimeout(() => {
-                createExplosion(firework);
-                firework.remove();
-            }, 1400);
-        }
-
-        function createExplosion(firework) {
-            const rect = firework.getBoundingClientRect();
-            const colors = ['#ff6600', '#ffaa00', '#ff0066', '#00ff66', '#0066ff', '#aa00ff'];
-            
-            for (let i = 0; i < 20; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'firework-particle';
-                particle.style.left = rect.left + 'px';
-                particle.style.top = rect.top + 'px';
-                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-                
-                const angle = (Math.PI * 2 * i) / 20;
-                const velocity = 2 + Math.random() * 3;
-                
-                document.body.appendChild(particle);
-                
-                let x = rect.left;
-                let y = rect.top;
-                let opacity = 1;
-                
-                const animate = () => {
-                    x += Math.cos(angle) * velocity;
-                    y += Math.sin(angle) * velocity;
-                    opacity -= 0.02;
-                    
-                    particle.style.left = x + 'px';
-                    particle.style.top = y + 'px';
-                    particle.style.opacity = opacity;
-                    
-                    if (opacity > 0) {
-                        requestAnimationFrame(animate);
-                    } else {
-                        particle.remove();
-                    }
-                };
-                
-                requestAnimationFrame(animate);
-            }
-        }
-
-        function getRandomColor() {
-            const colors = ['#ff6600', '#ffaa00', '#ff0066', '#00ff66', '#0066ff', '#aa00ff'];
-            return colors[Math.floor(Math.random() * colors.length)];
-        }
-
-        // Splash Screen LAW
-        function showLawSplash() {
-            const splash = document.getElementById('lawSplash');
-            splash.style.display = 'flex';
-            
-            // Criar partículas flutuantes
-            for (let i = 0; i < 30; i++) {
-                setTimeout(() => createFloatingParticle(), i * 100);
-            }
-            
-            // Criar fogos especiais para LAW
-            for (let i = 0; i < 8; i++) {
-                setTimeout(() => createLawFirework(), i * 400);
-            }
-            
-            // Animação do texto
-            const text = 'Estúdio LAW';
-            const textElement = document.getElementById('lawText');
-            let index = 0;
-            
-            const typeText = () => {
-                if (index < text.length) {
-                    textElement.textContent += text[index];
-                    index++;
-                    setTimeout(typeText, 150);
+        let devtools = {open: false};
+        const threshold = 160;
+        setInterval(() => {
+            if (window.outerHeight - window.innerHeight > threshold ||
+                window.outerWidth - window.innerWidth > threshold) {
+                if (!devtools.open) {
+                    devtools.open = true;
+                    document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#000;color:#ff0000;font-size:24px;font-weight:bold;">⚠️ ACESSO BLOQUEADO ⚠️</div>';
                 }
-            };
-            
-            setTimeout(typeText, 1000);
-            
-            // Iniciar script principal após 6 segundos
-            setTimeout(() => {
-                splash.style.opacity = '0';
-                setTimeout(() => {
-                    splash.style.display = 'none';
-                    initKhanScript();
-                }, 1000);
-            }, 6000);
-        }
+            }
+        }, 500);
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    })();
 
-        function createFloatingParticle() {
+    // ----------- LÓGICA DE SENHA -----------
+    const SYSTEM_PASSWORD = "estudiolaw123";
+    function checkPassword() {
+        const input = document.getElementById('passwordInput');
+        const error = document.getElementById('passwordError');
+        if (input.value === SYSTEM_PASSWORD) {
+            showCelebration();
+        } else {
+            error.classList.add('show');
+            input.style.borderColor = '#ff4444';
+            setTimeout(() => {
+                error.classList.remove('show');
+                input.style.borderColor = 'rgba(255, 102, 0, 0.3)';
+            }, 2000);
+        }
+        input.value = '';
+    }
+    document.getElementById('btnAcessar').onclick = checkPassword;
+    document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') checkPassword();
+    });
+
+    // ----------- CELEBRAÇÃO -----------
+    function showCelebration() {
+        document.getElementById('passwordContainer').style.display = 'none';
+        const celebration = document.getElementById('celebrationScreen');
+        celebration.style.display = 'flex';
+        for (let i = 0; i < 15; i++) setTimeout(() => createFirework(), i * 200);
+        setTimeout(() => {
+            celebration.style.display = 'none';
+            showLawSplash();
+        }, 4000);
+    }
+    function createFirework() {
+        const firework = document.createElement('div');
+        firework.className = 'firework';
+        firework.style.left = Math.random() * window.innerWidth + 'px';
+        firework.style.background = getRandomColor();
+        firework.style.boxShadow = `0 0 10px ${firework.style.background}`;
+        document.getElementById('celebrationScreen').appendChild(firework);
+        setTimeout(() => {
+            createExplosion(firework);
+            firework.remove();
+        }, 1400);
+    }
+    function createExplosion(firework) {
+        const rect = firework.getBoundingClientRect();
+        const colors = ['#ff6600','#ffaa00','#ff0066','#00ff66','#0066ff','#aa00ff'];
+        for (let i = 0; i < 20; i++) {
             const particle = document.createElement('div');
-            particle.className = 'floating-particle';
-            particle.style.left = Math.random() * window.innerWidth + 'px';
-            particle.style.animationDelay = Math.random() * 2 + 's';
-            
-            document.getElementById('lawSplash').appendChild(particle);
-            
-            setTimeout(() => particle.remove(), 6000);
-        }
-
-        function createLawFirework() {
-            const firework = document.createElement('div');
-            firework.className = 'law-firework';
-            firework.style.left = Math.random() * window.innerWidth + 'px';
-            firework.style.bottom = '0px';
-            
-            document.getElementById('lawSplash').appendChild(firework);
-            
-            let y = window.innerHeight;
-            const targetY = Math.random() * 300 + 200;
-            
+            particle.className = 'firework-particle';
+            particle.style.left = rect.left + 'px';
+            particle.style.top = rect.top + 'px';
+            particle.style.background = colors[Math.floor(Math.random()*colors.length)];
+            const angle = (Math.PI*2*i)/20;
+            const velocity = 2 + Math.random()*3;
+            document.body.appendChild(particle);
+            let x = rect.left, y = rect.top, opacity = 1;
             const animate = () => {
-                y -= 8;
-                firework.style.bottom = (window.innerHeight - y) + 'px';
-                
-                if (y > targetY) {
-                    requestAnimationFrame(animate);
-                } else {
-                    createLawExplosion(firework);
-                    firework.remove();
-                }
+                x += Math.cos(angle)*velocity;
+                y += Math.sin(angle)*velocity;
+                opacity -= 0.02;
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.opacity = opacity;
+                if (opacity > 0) requestAnimationFrame(animate);
+                else particle.remove();
             };
-            
             requestAnimationFrame(animate);
         }
+    }
+    function getRandomColor() {
+        const colors = ['#ff6600','#ffaa00','#ff0066','#00ff66','#0066ff','#aa00ff'];
+        return colors[Math.floor(Math.random()*colors.length)];
+    }
 
-        function createLawExplosion(firework) {
-            const rect = firework.getBoundingClientRect();
-            
-            for (let i = 0; i < 15; i++) {
-                const particle = document.createElement('div');
-                particle.style.position = 'absolute';
-                particle.style.width = '2px';
-                particle.style.height = '2px';
-                particle.style.background = '#00aaff';
-                particle.style.borderRadius = '50%';
-                particle.style.boxShadow = '0 0 5px #00aaff';
-                particle.style.left = rect.left + 'px';
-                particle.style.top = rect.top + 'px';
-                
-                document.getElementById('lawSplash').appendChild(particle);
-                
-                const angle = (Math.PI * 2 * i) / 15;
-                const velocity = 1 + Math.random() * 2;
-                
-                let x = rect.left;
-                let y = rect.top;
-                let opacity = 1;
-                
-                const animate = () => {
-                    x += Math.cos(angle) * velocity;
-                    y += Math.sin(angle) * velocity;
-                    opacity -= 0.015;
-                    
-                    particle.style.left = x + 'px';
-                    particle.style.top = y + 'px';
-                    particle.style.opacity = opacity;
-                    
-                    if (opacity > 0) {
-                        requestAnimationFrame(animate);
-                    } else {
-                        particle.remove();
-                    }
-                };
-                
-                requestAnimationFrame(animate);
+    // ----------- SPLASH LAW -----------
+    function showLawSplash() {
+        const splash = document.getElementById('lawSplash');
+        splash.style.display = 'flex';
+        for (let i = 0; i < 30; i++) setTimeout(() => createFloatingParticle(), i * 100);
+        for (let i = 0; i < 8; i++) setTimeout(() => createLawFirework(), i * 400);
+        const text = 'Estúdio LAW';
+        const textElement = document.getElementById('lawText');
+        let index = 0;
+        const typeText = () => {
+            if (index < text.length) {
+                textElement.textContent += text[index];
+                index++;
+                setTimeout(typeText, 150);
             }
+        };
+        setTimeout(typeText, 1000);
+        setTimeout(() => {
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.display = 'none';
+                // Coloque aqui a chamada do seu script principal
+                alert('Seu painel/script está liberado! 🟢');
+            }, 1000);
+        }, 6000);
+    }
+    function createFloatingParticle() {
+        const particle = document.createElement('div');
+        particle.className = 'floating-particle';
+        particle.style.left = Math.random() * window.innerWidth + 'px';
+        particle.style.animationDelay = Math.random() * 2 + 's';
+        document.getElementById('lawSplash').appendChild(particle);
+        setTimeout(() => particle.remove(), 6000);
+    }
+    function createLawFirework() {
+        const firework = document.createElement('div');
+        firework.className = 'law-firework';
+        firework.style.left = Math.random() * window.innerWidth + 'px';
+        firework.style.bottom = '0px';
+        document.getElementById('lawSplash').appendChild(firework);
+        let y = window.innerHeight;
+        const targetY = Math.random() * 300 + 200;
+        const animate = () => {
+            y -= 8;
+            firework.style.bottom = (window.innerHeight - y) + 'px';
+            if (y > targetY) requestAnimationFrame(animate);
+            else {
+                createLawExplosion(firework);
+                firework.remove();
+            }
+        };
+        requestAnimationFrame(animate);
+    }
+    function createLawExplosion(firework) {
+        const rect = firework.getBoundingClientRect();
+        for (let i = 0; i < 15; i++) {
+            const particle = document.createElement('div');
+            particle.style.position = 'absolute';
+            particle.style.width = '2px';
+            particle.style.height = '2px';
+            particle.style.background = '#00aaff';
+            particle.style.borderRadius = '50%';
+            particle.style.boxShadow = '0 0 5px #00aaff';
+            particle.style.left = rect.left + 'px';
+            particle.style.top = rect.top + 'px';
+            document.getElementById('lawSplash').appendChild(particle);
+            const angle = (Math.PI * 2 * i) / 15;
+            const velocity = 1 + Math.random() * 2;
+            let x = rect.left, y = rect.top, opacity = 1;
+            const animate = () => {
+                x += Math.cos(angle) * velocity;
+                y += Math.sin(angle) * velocity;
+                opacity -= 0.015;
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.opacity = opacity;
+                if (opacity > 0) requestAnimationFrame(animate);
+                else particle.remove();
+            };
+            requestAnimationFrame(animate);
         }
-
-        // Script principal do KhanAcademy
-        function initKhanScript() {
-            // Script desenvolvido por Wesley1w2e
-            
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/gh/DarkModde/Dark-Scripts/ProtectionScript.js';
-            document.head.appendChild(script);
-
-            let loadedPlugins = [];
-
-            console.clear();
-            const noop = () => {};
-            console.warn = console.error = window.debug = noop;
-
-            class EventEmitter {
-                constructor() { this.events = {}; }
-                on(t, e) { (Array.isArray(t) ? t : [t]).forEach(t => { (this.events[t] = this.events[t] || []).push(e); }); }
-                off(t, e) { (Array.isArray(t) ? t : [t]).forEach(t => { if(this.events[t]) this.events[t] = this.events[t].filter(h => h !== e); }); }
-                emit(t, ...e) { this.events[t]?.forEach(h => h(...e)); }
-                once(t, e) {
-                    const s = (...i) => { e(...i); this.off(t, s); };
-                    this.on(t, s);
-                }
-            }
-
-            const plppdo = new EventEmitter();
-
-            new MutationObserver(mutationsList => {
-                if (mutationsList.some(m => m.type === 'childList')) {
-                    plppdo.emit('domChanged');
-                }
-            }).observe(document.body, { childList: true, subtree: true });
-
-            const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-            const findAndClickBySelector = selector => document.querySelector(selector)?.click();
-
-            function sendToast(text, duration = 5000, gravity = 'bottom') {
-                // Simular toast sem dependência externa
-                const toast = document.createElement('div');
-                toast.textContent = text;
-                toast.style.cssText = `
-                    position: fixed;
-                    bottom: 20px;
-                    right: 20px;
-                    background: #000;
-                    color: #fff;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    border: 1px solid #ff6600;
-                    z-index: 1000;
-                    animation: toastSlide 0.3s ease;
-                `;
-                
-                document.body.appendChild(toast);
-                
-                setTimeout(() => {
-                    toast.style.animation = 'toastSlide 0.3s ease reverse';
-                    setTimeout(() => toast.remove(), 300);
-                }, duration);
-            }
-
-            // Adicionar CSS para toast
-            const toastCSS = document.createElement('style');
-            toastCSS.textContent = `
-                @keyframes toastSlide {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-            `;
-            document.head.appendChild(toastCSS);
-
-            async function loadScript(url, label) {
-                try {
-                    const response = await fetch(url);
-                    const scriptText = await response.text();
-                    loadedPlugins.push(label);
-                    eval(scriptText);
-                } catch (error) {
-                    console.log('Script carregado localmente');
-                }
-            }
-
-            async function loadCss(url) {
-                return new Promise(resolve => {
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.type = 'text/css';
-                    link.href = url;
-                    link.onload = resolve;
-                    link.onerror = resolve; // Continue mesmo se falhar
-                    document.head.appendChild(link);
-                });
-            }
-
-            function setupMain() {
-                const originalFetch = window.fetch;
-
-                if (originalFetch) {
-                    window.fetch = async function(input, init) {
-                        let body;
-                        if (input instanceof Request) {
-                            body = await input.clone().text();
-                        } else if (init?.body) {
-                            body = init.body;
-                        }
-
-                        if (body?.includes('"operationName":"updateUserVideoProgress"')) {
-                            try {
-                                let bodyObj = JSON.parse(body);
-                                if (bodyObj.variables?.input) {
-                                    const durationSeconds = bodyObj.variables.input.durationSeconds;
-                                    bodyObj.variables.input.secondsWatched = durationSeconds;
-                                    bodyObj.variables.input.lastSecondWatched = durationSeconds;
-                                    body = JSON.stringify(bodyObj);
-
-                                    if (input instanceof Request) {
-                                        input = new Request(input, { body });
-                                    } else {
-                                        init.body = body;
-                                    }
-
-                                    sendToast("🔓┃Vídeo explorado.", 1000);
-                                }
-                            } catch (e) { /* erro ignorado */ }
-                        }
-
-                        const originalResponse = await originalFetch.apply(this, arguments);
-
-                        try {
-                            const clonedResponse = originalResponse.clone();
-                            const responseBody = await clonedResponse.text();
-                            let responseObj = JSON.parse(responseBody);
-
-                            if (responseObj?.data?.assessmentItem?.item?.itemData) {
-                                let itemData = JSON.parse(responseObj.data.assessmentItem.item.itemData);
-
-                                if (itemData.question.content[0] === itemData.question.content[0].toUpperCase()) {
-                                    itemData.answerArea = {
-                                        calculator: false,
-                                        chi2Table: false,
-                                        periodicTable: false,
-                                        tTable: false,
-                                        zTable: false
-                                    };
-
-                                    itemData.question.content = " " + `[[☃ radio 1]]`;
-                                    itemData.question.widgets = {
-                                        "radio 1": {
-                                            type: "radio",
-                                            options: {
-                                                choices: [{ content: "Wesley o Brabo", correct: true }]
-                                            }
-                                        }
-                                    };
-
-                                    responseObj.data.assessmentItem.item.itemData = JSON.stringify(itemData);
-
-                                    return new Response(JSON.stringify(responseObj), {
-                                        status: originalResponse.status,
-                                        statusText: originalResponse.statusText,
-                                        headers: originalResponse.headers
-                                    });
-                                }
-                            }
-                        } catch (e) { /* erro ignorado */ }
-
-                        return originalResponse;
-                    };
-                }
-
-                (async () => {
-                    const selectors = [
-                        `[data-testid="choice-icon__library-choice-icon"]`,
-                        `[data-testid="exercise-check-answer"]`,
-                        `[data-testid="exercise-next-question"]`,
-                        `._1udzurba`,
-                        `._awve9b`
-                    ];
-
-                    window.khanwareDominates = true;
-
-                    while (window.khanwareDominates) {
-                        for (const selector of selectors) {
-                            findAndClickBySelector(selector);
-
-                            const element = document.querySelector(`${selector} > div`);
-                            if (element?.innerText === "Mostrar resumo") {
-                                sendToast("🎉┃Exercício concluído!", 3000);
-                            }
-                        }
-                        await delay(800);
-                    }
-                })();
-            }
-
-            // Verificar se está no Khan Academy ou redirecionar
-            if (!/^https?:\/\/([a-z0-9-]+\.)?khanacademy\.org/.test(window.location.href)) {
-                // Se não estiver no Khan Academy, apenas mostrar mensagem
-                sendToast("🍀┃KhanResolver ativado! Navegue até pt.khanacademy.org para usar.");
-            } else {
-                (async function init() {
-                    await Promise.all([
-                        loadScript('https://cdn.jsdelivr.net/npm/darkreader/darkreader.min.js','darkReaderPlugin').then(() => { 
-                            if (window.DarkReader) {
-                                DarkReader.setFetchMethod(window.fetch); 
-                                DarkReader.enable(); 
-                            }
-                        }).catch(() => {}),
-                        loadCss('https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css').catch(() => {}),
-                        loadScript('https://cdn.jsdelivr.net/npm/toastify-js', 'toastifyPlugin').catch(() => {}),
-                    ]);
-
-                    await delay(1000);
-                    setupMain();
-                    sendToast("🍀┃KhanResolver iniciado!");
-                    console.clear();
-                })();
-            }
-        }
-    </script>
-</body>
-</html>
+    }
+})();

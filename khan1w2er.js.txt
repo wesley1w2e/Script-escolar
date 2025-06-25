@@ -1,242 +1,4 @@
-// ==UserScript==
-// @name         Estúdio LAW - KhanResolver Protegido
-// @namespace    https://github.com/wesley1w2e/
-// @version      1.0
-// @description  Sistema de senha, animações, fogos e splash para scripts protegidos na Khan Academy
-// @author       Wesley1w2e
-// @match        *://*.khanacademy.org/*
-// @grant        none
-// ==/UserScript==
-
-(function() {
-    'use strict';
-
-    // --- INSERE TODO O HTML/CSS DA INTERFACE ---
-    const html = `
-<!-- Sistema de Senha -->
-<div class="password-container" id="passwordContainer">
-    <div class="password-panel">
-        <div class="password-title">🔐 ACESSO RESTRITO</div>
-        <div class="password-subtitle">Sistema Protegido - Digite a senha</div>
-        <input type="password" class="password-input" id="passwordInput" placeholder="Digite sua senha..." maxlength="20">
-        <button class="password-btn" id="btnAcessar">ACESSAR SISTEMA</button>
-        <div class="password-error" id="passwordError">Senha incorreta! Tente novamente.</div>
-    </div>
-</div>
-
-<!-- Tela de Comemoração -->
-<div class="celebration-screen" id="celebrationScreen">
-    <div class="celebration-content">
-        <div class="celebration-title">🎉 PARABÉNS! 🎉</div>
-        <div class="celebration-subtitle">O Script é Seu!</div>
-    </div>
-</div>
-
-<!-- Splash Screen Estúdio LAW -->
-<div class="law-splash" id="lawSplash">
-    <div class="law-text" id="lawText"></div>
-    <div class="loading-bar">
-        <div class="loading-progress"></div>
-    </div>
-</div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', html);
-
-    // --- INSERE O CSS ---
-    const css = document.createElement('style');
-    css.textContent = `
-    /* (Cole aqui TODO o CSS do <style> do seu HTML, igualzinho)
-       ... 
-       Para não repetir aqui todo o bloco, pegue o <style> do seu HTML e cole neste bloco!
-    */
-    `;
-    document.head.appendChild(css);
-
-    // --- Proteção Devtools (igual ao seu HTML) ---
-    (function() {
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'F12' ||
-                (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-                (e.ctrlKey && e.shiftKey && e.key === 'J') ||
-                (e.ctrlKey && e.key === 'U')) {
-                e.preventDefault();
-                return false;
-            }
-        });
-        let devtools = {open: false};
-        const threshold = 160;
-        setInterval(() => {
-            if (window.outerHeight - window.innerHeight > threshold ||
-                window.outerWidth - window.innerWidth > threshold) {
-                if (!devtools.open) {
-                    devtools.open = true;
-                    document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#000;color:#ff0000;font-size:24px;font-weight:bold;">⚠️ ACESSO BLOQUEADO ⚠️</div>';
-                }
-            }
-        }, 500);
-        document.addEventListener('contextmenu', e => e.preventDefault());
-    })();
-
-    // --- Sistema de senha (igual ao seu HTML, pequenas adaptações) ---
-    const correctPassword = "wesley123";
-    function checkPassword() {
-        const input = document.getElementById('passwordInput');
-        const error = document.getElementById('passwordError');
-        if (input.value === correctPassword) {
-            showCelebration();
-        } else {
-            error.classList.add('show');
-            input.style.borderColor = '#ff4444';
-            setTimeout(() => {
-                error.classList.remove('show');
-                input.style.borderColor = 'rgba(255, 102, 0, 0.3)';
-            }, 2000);
-        }
-        input.value = '';
-    }
-    document.getElementById('btnAcessar').onclick = checkPassword;
-    document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') checkPassword();
-    });
-
-    // --- Comemoração com fogos, Splash LAW e Script principal (igual ao seu HTML) ---
-    function showCelebration() {
-        document.getElementById('passwordContainer').style.display = 'none';
-        const celebration = document.getElementById('celebrationScreen');
-        celebration.style.display = 'flex';
-        for (let i = 0; i < 15; i++) setTimeout(() => createFirework(), i * 200);
-        setTimeout(() => {
-            celebration.style.display = 'none';
-            showLawSplash();
-        }, 4000);
-    }
-    function createFirework() {
-        const firework = document.createElement('div');
-        firework.className = 'firework';
-        firework.style.left = Math.random() * window.innerWidth + 'px';
-        firework.style.background = getRandomColor();
-        firework.style.boxShadow = `0 0 10px ${firework.style.background}`;
-        document.getElementById('celebrationScreen').appendChild(firework);
-        setTimeout(() => {
-            createExplosion(firework);
-            firework.remove();
-        }, 1400);
-    }
-    function createExplosion(firework) {
-        const rect = firework.getBoundingClientRect();
-        const colors = ['#ff6600', '#ffaa00', '#ff0066', '#00ff66', '#0066ff', '#aa00ff'];
-        for (let i = 0; i < 20; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'firework-particle';
-            particle.style.left = rect.left + 'px';
-            particle.style.top = rect.top + 'px';
-            particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-            const angle = (Math.PI * 2 * i) / 20;
-            const velocity = 2 + Math.random() * 3;
-            document.body.appendChild(particle);
-            let x = rect.left, y = rect.top, opacity = 1;
-            const animate = () => {
-                x += Math.cos(angle) * velocity;
-                y += Math.sin(angle) * velocity;
-                opacity -= 0.02;
-                particle.style.left = x + 'px';
-                particle.style.top = y + 'px';
-                particle.style.opacity = opacity;
-                if (opacity > 0) requestAnimationFrame(animate);
-                else particle.remove();
-            };
-            requestAnimationFrame(animate);
-        }
-    }
-    function getRandomColor() {
-        const colors = ['#ff6600', '#ffaa00', '#ff0066', '#00ff66', '#0066ff', '#aa00ff'];
-        return colors[Math.floor(Math.random() * colors.length)];
-    }
-    function showLawSplash() {
-        const splash = document.getElementById('lawSplash');
-        splash.style.display = 'flex';
-        for (let i = 0; i < 30; i++) setTimeout(() => createFloatingParticle(), i * 100);
-        for (let i = 0; i < 8; i++) setTimeout(() => createLawFirework(), i * 400);
-        const text = 'Estúdio LAW';
-        const textElement = document.getElementById('lawText');
-        let index = 0;
-        const typeText = () => {
-            if (index < text.length) {
-                textElement.textContent += text[index];
-                index++;
-                setTimeout(typeText, 150);
-            }
-        };
-        setTimeout(typeText, 1000);
-        setTimeout(() => {
-            splash.style.opacity = '0';
-            setTimeout(() => {
-                splash.style.display = 'none';
-                initKhanScript();
-            }, 1000);
-        }, 6000);
-    }
-    function createFloatingParticle() {
-        const particle = document.createElement('div');
-        particle.className = 'floating-particle';
-        particle.style.left = Math.random() * window.innerWidth + 'px';
-        particle.style.animationDelay = Math.random() * 2 + 's';
-        document.getElementById('lawSplash').appendChild(particle);
-        setTimeout(() => particle.remove(), 6000);
-    }
-    function createLawFirework() {
-        const firework = document.createElement('div');
-        firework.className = 'law-firework';
-        firework.style.left = Math.random() * window.innerWidth + 'px';
-        firework.style.bottom = '0px';
-        document.getElementById('lawSplash').appendChild(firework);
-        let y = window.innerHeight;
-        const targetY = Math.random() * 300 + 200;
-        const animate = () => {
-            y -= 8;
-            firework.style.bottom = (window.innerHeight - y) + 'px';
-            if (y > targetY) requestAnimationFrame(animate);
-            else {
-                createLawExplosion(firework);
-                firework.remove();
-            }
-        };
-        requestAnimationFrame(animate);
-    }
-    function createLawExplosion(firework) {
-        const rect = firework.getBoundingClientRect();
-        for (let i = 0; i < 15; i++) {
-            const particle = document.createElement('div');
-            particle.style.position = 'absolute';
-            particle.style.width = '2px';
-            particle.style.height = '2px';
-            particle.style.background = '#00aaff';
-            particle.style.borderRadius = '50%';
-            particle.style.boxShadow = '0 0 5px #00aaff';
-            particle.style.left = rect.left + 'px';
-            particle.style.top = rect.top + 'px';
-            document.getElementById('lawSplash').appendChild(particle);
-            const angle = (Math.PI * 2 * i) / 15;
-            const velocity = 1 + Math.random() * 2;
-            let x = rect.left, y = rect.top, opacity = 1;
-            const animate = () => {
-                x += Math.cos(angle) * velocity;
-                y += Math.sin(angle) * velocity;
-                opacity -= 0.015;
-                particle.style.left = x + 'px';
-                particle.style.top = y + 'px';
-                particle.style.opacity = opacity;
-                if (opacity > 0) requestAnimationFrame(animate);
-                else particle.remove();
-            };
-            requestAnimationFrame(animate);
-        }
-    }
-
-    // --- COLOQUE AQUI SUA LÓGICA PRINCIPAL (initKhanScript) ---
-
-    function initKhanScript() {
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -601,6 +363,12 @@
     </div>
 
     <script>
+        // ======================================
+        // CONFIGURAÇÃO DO SISTEMA - EDITE AQUI
+        // ======================================
+        const SYSTEM_PASSWORD = "estudiolaw123"; // Senha principal do sistema
+        const SCRIPT_AUTHOR = "Wesley1w2e"; // Autor do script
+        // ======================================
         // Proteção contra ferramentas de desenvolvedor
         (function() {
             'use strict';
@@ -634,14 +402,11 @@
             document.addEventListener('contextmenu', e => e.preventDefault());
         })();
 
-        // Sistema de senha
-        const correctPassword = "wesley123"; // Defina sua senha aqui
-
         function checkPassword() {
             const input = document.getElementById('passwordInput');
             const error = document.getElementById('passwordError');
             
-            if (input.value === correctPassword) {
+            if (input.value === SYSTEM_PASSWORD) {
                 showCelebration();
             } else {
                 error.classList.add('show');
@@ -859,7 +624,7 @@
             }
         }
 
-        // Script principal do KhanAcademy (seu código modificado)
+        // Script principal do KhanAcademy
         function initKhanScript() {
             // Script desenvolvido por Wesley1w2e
             
@@ -1081,6 +846,3 @@
     </script>
 </body>
 </html>
-    }
-
-})();

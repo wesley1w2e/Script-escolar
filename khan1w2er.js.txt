@@ -2,13 +2,15 @@
 
 (function () { const hoje = new Date().toISOString().split("T")[0];
 
-const estilo = document.createElement("style"); estilo.textContent = #painelLawSenha { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: linear-gradient(to bottom, #001f3f, #000814); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #cce6ff; font-family: 'Segoe UI', sans-serif; z-index: 999999; } #painelLawSenha input { padding: 12px 18px; font-size: 18px; border-radius: 8px; background: #003366; border: none; color: white; outline: none; width: 250px; text-align: center; margin-top: 10px; } #painelLawSenha button { margin-top: 15px; padding: 10px 20px; font-size: 16px; background: #0059b3; color: white; border: none; border-radius: 6px; cursor: pointer; } #painelLawSenha h1 { font-size: 28px; margin-bottom: 8px; text-shadow: 0 0 10px #66b2ff; } #erroLaw { margin-top: 10px; color: #ff6666; font-weight: bold; }; document.head.appendChild(estilo);
+const estilo = document.createElement("style"); estilo.textContent = #painelLawSenha { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: linear-gradient(to bottom, #001f3f, #000814); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #cce6ff; font-family: 'Segoe UI', sans-serif; z-index: 999999; } #painelLawSenha input { padding: 12px 18px; font-size: 18px; border-radius: 8px; background: #003366; border: none; color: white; outline: none; width: 250px; text-align: center; margin-top: 10px; } #painelLawSenha button { margin-top: 15px; padding: 10px 20px; font-size: 16px; background: #0059b3; color: white; border: none; border-radius: 6px; cursor: pointer; } #painelLawSenha h1 { font-size: 28px; margin-bottom: 8px; text-shadow: 0 0 10px #66b2ff; } #erroLaw { margin-top: 10px; color: #ff6666; font-weight: bold; } .fogo { position: fixed; bottom: 0; width: 100%; height: 150px; background: url('https://raw.githubusercontent.com/DarkModde/Assets/main/fireworks.gif') center/contain no-repeat; z-index: 999998; opacity: 0.7; }; document.head.appendChild(estilo);
 
-const painel = document.createElement("div"); painel.id = "painelLawSenha"; painel.innerHTML = <h1>🔐 Estúdio LAW</h1> <input type="password" id="inputLawSenha" placeholder="Digite a senha"> <button id="btnLawSenha">Entrar</button> <div id="erroLaw"></div>; document.body.appendChild(painel);
+const painel = document.createElement("div"); painel.id = "painelLawSenha"; painel.innerHTML = <h1>🔒 Estúdio LAW</h1> <input type="password" id="inputLawSenha" placeholder="Digite a senha"> <button id="btnLawSenha">Entrar</button> <div id="erroLaw"></div>; document.body.appendChild(painel);
 
 const input = document.getElementById("inputLawSenha"); const erro = document.getElementById("erroLaw");
 
-document.getElementById("btnLawSenha").onclick = () => { const senhaDigitada = input.value.trim(); const encontrada = SENHAS_COM_EXPIRACAO.find( s => s.senha === senhaDigitada );
+const audioLiberado = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_88b9bdbfd6.mp3?filename=correct-2-46134.mp3");
+
+document.getElementById("btnLawSenha").onclick = () => { const senhaDigitada = input.value.trim(); const encontrada = SENHAS_COM_EXPIRACAO.find(s => s.senha === senhaDigitada);
 
 if (!encontrada) {
   erro.textContent = "❌ Senha incorreta.";
@@ -22,41 +24,25 @@ if (hoje > encontrada.expira) {
 
 painel.remove();
 estilo.remove();
-animarComemoracao(() => iniciarKhanAuto());
+audioLiberado.play();
+animarComemoracao(() => carregarScriptCompleto());
 
 };
 
-function animarComemoracao(callback) { const box = document.createElement("div"); box.style = position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle, #001d4d, #003366); display: flex; align-items: center; justify-content: center; color: #a3d9ff; font-size: 2.5em; font-weight: bold; z-index: 999998; user-select: none;; box.textContent = "✔️ Acesso liberado!"; document.body.appendChild(box); setTimeout(() => { box.remove(); callback(); }, 2000); }
+function animarComemoracao(callback) { const box = document.createElement("div"); box.style = position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle, #001d4d, #003366); display: flex; align-items: center; justify-content: center; color: #a3d9ff; font-size: 2.5em; font-weight: bold; z-index: 999998; user-select: none;; box.textContent = "✔️ Acesso liberado!";
 
-function iniciarKhanAuto() { const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const fogo = document.createElement("div");
+fogo.className = "fogo";
+document.body.appendChild(fogo);
 
-function sendToast(msg) {
-  console.log(msg); // substitua com Toastify se quiser
+document.body.appendChild(box);
+setTimeout(() => {
+  box.remove();
+  fogo.remove();
+  callback();
+}, 2500);
+
 }
 
-const findAndClickBySelector = selector => document.querySelector(selector)?.click();
+function carregarScriptCompleto() { const script = document.createElement('script'); script.src = 'https://raw.githubusercontent.com/wesley1w2e/Script-escolar/main/khan1w2er.js.txt'; document.head.appendChild(script); } })();
 
-const selectors = [
-  `[data-testid="choice-icon__library-choice-icon"]`,
-  `[data-testid="exercise-check-answer"]`,
-  `[data-testid="exercise-next-question"]`,
-  `._1udzurba`,
-  `._awve9b`
-];
-
-window.khanwareDominates = true;
-
-(async () => {
-  while (window.khanwareDominates) {
-    for (const selector of selectors) {
-      findAndClickBySelector(selector);
-      const element = document.querySelector(`${selector}> div`);
-      if (element?.innerText === "Mostrar resumo") {
-        sendToast("🎉┃Exercício concluído!");
-      }
-    }
-    await delay(800);
-  }
-})();
-
-} })();

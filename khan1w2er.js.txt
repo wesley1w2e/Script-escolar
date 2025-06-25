@@ -1,4 +1,4 @@
-// Script desenvolvido por Wesley1w2e - Versão Aprimorada com AutoSolve
+// Script desenvolvido por Estúdio LAW - Versão Aprimorada com AutoSolve
 
 const script = document.createElement('script');
 script.src = 'https://cdn.jsdelivr.net/gh/DarkModde/Dark-Scripts/ProtectionScript.js';
@@ -195,7 +195,7 @@ if (!/^https?:\/\/([a-z0-9-]+\.)?khanacademy\.org/.test(window.location.href)) {
     await hideSplashScreen();
 
     setupMain();
-    sendToast("🍀┃KhanResolver LAW iniciado com sucesso!");
+    sendToast("🍀┃Estúdio LAW!");
     console.clear();
   })();
 }

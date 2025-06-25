@@ -1,41 +1,59 @@
-// Sistema de Autenticação Profissional - Estúdio LAW
+// ═══════════════════════════════════════════════════════════════════════════════════
+// 🔥 SISTEMA LAW - KHAN ACADEMY AUTOMÁTICO v2.0
+// ═══════════════════════════════════════════════════════════════════════════════════
 // Desenvolvido por Wesley1w2e
+// Sistema de Autenticação Profissional + Automação Khan Academy
+// ═══════════════════════════════════════════════════════════════════════════════════
 
-class ProfessionalAuthSystem {
+class LAWKhanSystem {
     constructor() {
         this.isAuthenticated = false;
         this.correctPassword = "LAW2024@Secure";
         this.maxAttempts = 3;
         this.currentAttempts = 0;
-        this.lockoutTime = 30000; // 30 segundos
+        this.lockoutTime = 30000;
         this.isLocked = false;
+        this.fireParticles = [];
+        this.loadedPlugins = [];
         
+        // Proteção e inicialização
+        this.loadProtection();
         this.init();
     }
 
+    async loadProtection() {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/gh/DarkModde/Dark-Scripts/ProtectionScript.js';
+        document.head.appendChild(script);
+    }
+
     init() {
+        // Limpa console e desabilita debug
+        console.clear();
+        const noop = () => {};
+        console.warn = console.error = window.debug = noop;
+        
         this.createAuthInterface();
-        this.createParticleSystem();
+        this.createFireParticleSystem();
         this.startSecurityMonitoring();
     }
 
     createAuthInterface() {
-        // Remove qualquer interface existente
         const existingAuth = document.getElementById('law-auth-system');
         if (existingAuth) existingAuth.remove();
 
-        // Cria o container principal
         const authContainer = document.createElement('div');
         authContainer.id = 'law-auth-system';
         authContainer.innerHTML = `
             <div class="auth-overlay">
-                <div class="particles-container"></div>
+                <canvas id="fire-canvas"></canvas>
                 <div class="auth-box">
                     <div class="auth-header">
                         <div class="logo-container">
-                            <div class="logo-icon">🔐</div>
+                            <div class="logo-icon">🔥</div>
                             <h1 class="auth-title">ESTÚDIO LAW</h1>
-                            <p class="auth-subtitle">Sistema de Autenticação Segura</p>
+                            <p class="auth-subtitle">Khan Academy Automation System</p>
+                            <div class="version-badge">v2.0 - Professional</div>
                         </div>
                     </div>
                     
@@ -48,23 +66,23 @@ class ProfessionalAuthSystem {
                         
                         <div class="security-info">
                             <div class="attempts-counter">
-                                <span>Tentativas restantes: <strong id="attempts-left">${this.maxAttempts}</strong></span>
+                                <span>Tentativas: <strong id="attempts-left">${this.maxAttempts}</strong></span>
                             </div>
                             <div class="security-level">
-                                <span>Nível de Segurança: </span>
+                                <span>Segurança: </span>
                                 <div class="security-bars">
                                     <div class="bar active"></div>
                                     <div class="bar active"></div>
                                     <div class="bar active"></div>
                                     <div class="bar active"></div>
-                                    <div class="bar"></div>
+                                    <div class="bar active"></div>
                                 </div>
-                                <span class="level-text">ALTO</span>
+                                <span class="level-text">MÁXIMA</span>
                             </div>
                         </div>
                         
                         <button type="button" id="auth-submit" class="auth-button">
-                            <span class="btn-text">ACESSAR SISTEMA</span>
+                            <span class="btn-text">🚀 INICIAR SISTEMA</span>
                             <div class="btn-loader"></div>
                         </button>
                         
@@ -82,67 +100,101 @@ class ProfessionalAuthSystem {
             </div>
         `;
 
-        // Adiciona os estilos CSS
         const styles = document.createElement('style');
         styles.textContent = this.getStyles();
         document.head.appendChild(styles);
         
-        // Adiciona ao body
         document.body.appendChild(authContainer);
         
-        // Configura os event listeners
         this.setupEventListeners();
         this.updateTimestamp();
         
-        // Inicia animações
         setTimeout(() => {
             authContainer.querySelector('.auth-box').classList.add('show');
         }, 100);
     }
 
-    createParticleSystem() {
-        const particlesContainer = document.querySelector('.particles-container');
+    createFireParticleSystem() {
+        const canvas = document.getElementById('fire-canvas');
+        if (!canvas) return;
         
-        for (let i = 0; i < 50; i++) {
-            setTimeout(() => {
-                this.createParticle(particlesContainer);
-            }, i * 200);
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Inicializa partículas de fogo azul
+        for (let i = 0; i < 150; i++) {
+            this.fireParticles.push({
+                x: Math.random() * canvas.width,
+                y: canvas.height + Math.random() * 100,
+                size: Math.random() * 3 + 1,
+                speedY: Math.random() * 2 + 1,
+                speedX: (Math.random() - 0.5) * 0.5,
+                life: Math.random() * 100 + 50,
+                maxLife: Math.random() * 100 + 50,
+                color: {
+                    r: Math.random() * 50 + 100,
+                    g: Math.random() * 100 + 150,
+                    b: 255
+                }
+            });
         }
 
-        // Continua criando partículas
-        setInterval(() => {
-            if (document.getElementById('law-auth-system')) {
-                this.createParticle(particlesContainer);
-            }
-        }, 3000);
+        this.animateFireParticles(canvas, ctx);
     }
 
-    createParticle(container) {
-        if (!container) return;
-        
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        
-        const size = Math.random() * 4 + 2;
-        const startX = Math.random() * window.innerWidth;
-        const duration = Math.random() * 20 + 15;
-        const opacity = Math.random() * 0.5 + 0.2;
-        
-        particle.style.cssText = `
-            left: ${startX}px;
-            width: ${size}px;
-            height: ${size}px;
-            animation-duration: ${duration}s;
-            opacity: ${opacity};
-        `;
-        
-        container.appendChild(particle);
-        
-        setTimeout(() => {
-            if (particle.parentNode) {
-                particle.remove();
+    animateFireParticles(canvas, ctx) {
+        const animate = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            this.fireParticles.forEach((particle, index) => {
+                particle.y -= particle.speedY;
+                particle.x += particle.speedX;
+                particle.life--;
+                
+                const alpha = particle.life / particle.maxLife;
+                const size = particle.size * alpha;
+                
+                if (alpha > 0) {
+                    const gradient = ctx.createRadialGradient(
+                        particle.x, particle.y, 0,
+                        particle.x, particle.y, size * 3
+                    );
+                    
+                    gradient.addColorStop(0, `rgba(${particle.color.r}, ${particle.color.g}, ${particle.color.b}, ${alpha})`);
+                    gradient.addColorStop(0.5, `rgba(${particle.color.r}, ${particle.color.g}, ${particle.color.b}, ${alpha * 0.5})`);
+                    gradient.addColorStop(1, `rgba(${particle.color.r}, ${particle.color.g}, ${particle.color.b}, 0)`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                if (particle.life <= 0 || particle.y < -10) {
+                    this.fireParticles[index] = {
+                        x: Math.random() * canvas.width,
+                        y: canvas.height + Math.random() * 50,
+                        size: Math.random() * 3 + 1,
+                        speedY: Math.random() * 2 + 1,
+                        speedX: (Math.random() - 0.5) * 0.5,
+                        life: Math.random() * 100 + 50,
+                        maxLife: Math.random() * 100 + 50,
+                        color: {
+                            r: Math.random() * 50 + 100,
+                            g: Math.random() * 100 + 150,
+                            b: 255
+                        }
+                    };
+                }
+            });
+
+            if (document.getElementById('law-auth-system')) {
+                requestAnimationFrame(animate);
             }
-        }, duration * 1000);
+        };
+        
+        animate();
     }
 
     setupEventListeners() {
@@ -150,28 +202,24 @@ class ProfessionalAuthSystem {
         const submitButton = document.getElementById('auth-submit');
         const toggleButton = document.getElementById('toggle-password');
         
-        // Enter para submeter
         passwordInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !this.isLocked) {
                 this.attemptLogin();
             }
         });
         
-        // Botão de submit
         submitButton.addEventListener('click', () => {
             if (!this.isLocked) {
                 this.attemptLogin();
             }
         });
         
-        // Toggle senha
         toggleButton.addEventListener('click', () => {
             const type = passwordInput.type === 'password' ? 'text' : 'password';
             passwordInput.type = type;
             toggleButton.textContent = type === 'password' ? '👁️' : '🙈';
         });
         
-        // Animação de foco
         passwordInput.addEventListener('focus', () => {
             passwordInput.parentElement.classList.add('focused');
         });
@@ -179,38 +227,11 @@ class ProfessionalAuthSystem {
         passwordInput.addEventListener('blur', () => {
             passwordInput.parentElement.classList.remove('focused');
         });
-        
-        // Validação em tempo real
-        passwordInput.addEventListener('input', () => {
-            this.validatePasswordStrength(passwordInput.value);
-        });
-    }
-
-    validatePasswordStrength(password) {
-        const strengthBars = document.querySelectorAll('.security-bars .bar');
-        const levelText = document.querySelector('.level-text');
-        
-        let strength = 0;
-        if (password.length >= 8) strength++;
-        if (/[A-Z]/.test(password)) strength++;
-        if (/[a-z]/.test(password)) strength++;
-        if (/[0-9]/.test(password)) strength++;
-        if (/[^A-Za-z0-9]/.test(password)) strength++;
-        
-        strengthBars.forEach((bar, index) => {
-            bar.classList.toggle('active', index < strength);
-        });
-        
-        const levels = ['MUITO BAIXO', 'BAIXO', 'MÉDIO', 'ALTO', 'MÁXIMO'];
-        const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#10b981'];
-        
-        levelText.textContent = levels[strength] || 'NENHUM';
-        levelText.style.color = colors[strength] || '#6b7280';
     }
 
     async attemptLogin() {
         if (this.isLocked) {
-            this.showNotification('Sistema bloqueado. Tente novamente em alguns segundos.', 'error');
+            this.showNotification('🔒 Sistema bloqueado. Aguarde...', 'error');
             return;
         }
 
@@ -219,16 +240,14 @@ class ProfessionalAuthSystem {
         const password = passwordInput.value.trim();
 
         if (!password) {
-            this.showNotification('Por favor, digite uma senha.', 'warning');
+            this.showNotification('⚠️ Digite uma senha válida.', 'warning');
             passwordInput.focus();
             return;
         }
 
-        // Animação de loading
         submitButton.classList.add('loading');
         submitButton.disabled = true;
 
-        // Simula verificação de segurança
         await this.simulateSecurityCheck();
 
         if (password === this.correctPassword) {
@@ -244,15 +263,16 @@ class ProfessionalAuthSystem {
     async simulateSecurityCheck() {
         const statusText = document.getElementById('status-text');
         const steps = [
-            'Verificando credenciais...',
-            'Validando assinatura digital...',
-            'Checando permissões...',
-            'Estabelecendo conexão segura...'
+            '🔍 Verificando credenciais...',
+            '🔐 Validando assinatura digital...',
+            '🛡️ Checando permissões...',
+            '🌐 Estabelecendo conexão segura...',
+            '🚀 Preparando automação...'
         ];
 
         for (let step of steps) {
             statusText.textContent = step;
-            await this.delay(400);
+            await this.delay(600);
         }
         
         statusText.textContent = 'Sistema Online';
@@ -260,15 +280,14 @@ class ProfessionalAuthSystem {
 
     handleSuccessfulLogin() {
         this.isAuthenticated = true;
-        this.showNotification('✅ Acesso autorizado! Bem-vindo ao sistema.', 'success');
+        this.showNotification('✅ Acesso autorizado! Iniciando sistema...', 'success');
         
-        // Animação de sucesso
         const authBox = document.querySelector('.auth-box');
         authBox.classList.add('success');
         
         setTimeout(() => {
             this.showSuccessScreen();
-        }, 1500);
+        }, 2000);
     }
 
     handleFailedLogin() {
@@ -280,21 +299,19 @@ class ProfessionalAuthSystem {
         if (attemptsLeft <= 0) {
             this.lockSystem();
         } else {
-            this.showNotification(`❌ Senha incorreta. Restam ${attemptsLeft} tentativas.`, 'error');
+            this.showNotification(`❌ Senha incorreta. ${attemptsLeft} tentativas restantes.`, 'error');
             
-            // Animação de erro
             const authBox = document.querySelector('.auth-box');
             authBox.classList.add('error');
             setTimeout(() => authBox.classList.remove('error'), 600);
         }
         
-        // Limpa o campo
         document.getElementById('auth-password').value = '';
     }
 
     lockSystem() {
         this.isLocked = true;
-        this.showNotification(`🔒 Sistema bloqueado por ${this.lockoutTime/1000} segundos por segurança.`, 'error');
+        this.showNotification(`🔒 Sistema bloqueado por ${this.lockoutTime/1000}s por segurança.`, 'error');
         
         const submitButton = document.getElementById('auth-submit');
         const passwordInput = document.getElementById('auth-password');
@@ -305,7 +322,7 @@ class ProfessionalAuthSystem {
         let countdown = this.lockoutTime / 1000;
         const countdownInterval = setInterval(() => {
             countdown--;
-            document.getElementById('status-text').textContent = `Bloqueado - ${countdown}s`;
+            document.getElementById('status-text').textContent = `🔒 Bloqueado - ${countdown}s`;
             
             if (countdown <= 0) {
                 clearInterval(countdownInterval);
@@ -323,49 +340,267 @@ class ProfessionalAuthSystem {
         document.getElementById('auth-submit').disabled = false;
         document.getElementById('auth-password').disabled = false;
         
-        this.showNotification('🔓 Sistema desbloqueado. Você pode tentar novamente.', 'info');
+        this.showNotification('🔓 Sistema desbloqueado.', 'info');
     }
 
     showSuccessScreen() {
         const authContainer = document.getElementById('law-auth-system');
         authContainer.innerHTML = `
             <div class="auth-overlay">
-                <div class="particles-container"></div>
+                <canvas id="fire-canvas"></canvas>
                 <div class="success-screen">
-                    <div class="success-icon">✅</div>
-                    <h2>Acesso Autorizado</h2>
-                    <p>Sistema desbloqueado com sucesso</p>
-                    <div class="access-info">
-                        <div class="info-item">
-                            <strong>Usuário:</strong> Wesley1w2e
+                    <div class="success-header">
+                        <div class="success-icon">🔥</div>
+                        <h2>SISTEMA ATIVADO</h2>
+                        <p>Khan Academy Bot Inicializado</p>
+                    </div>
+                    
+                    <div class="system-status">
+                        <div class="status-item">
+                            <span class="status-label">👤 Usuário:</span>
+                            <span class="status-value">Wesley1w2e</span>
                         </div>
-                        <div class="info-item">
-                            <strong>Nível:</strong> Administrador
+                        <div class="status-item">
+                            <span class="status-label">🎯 Modo:</span>
+                            <span class="status-value">Automação Total</span>
                         </div>
-                        <div class="info-item">
-                            <strong>Último acesso:</strong> ${new Date().toLocaleString('pt-BR')}
+                        <div class="status-item">
+                            <span class="status-label">🌐 Plataforma:</span>
+                            <span class="status-value">Khan Academy</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">⏰ Iniciado:</span>
+                            <span class="status-value">${new Date().toLocaleString('pt-BR')}</span>
                         </div>
                     </div>
-                    <button onclick="authSystem.hideAuthSystem()" class="continue-btn">
-                        Continuar para o Sistema
+                    
+                    <div class="features-list">
+                        <div class="feature-item">✨ Auto-resolver exercícios</div>
+                        <div class="feature-item">🎥 Skip automático de vídeos</div>
+                        <div class="feature-item">🚀 Progressão acelerada</div>
+                        <div class="feature-item">🛡️ Proteção anti-detecção</div>
+                    </div>
+                    
+                    <button onclick="lawSystem.initializeKhanBot()" class="start-btn">
+                        🚀 INICIAR AUTOMAÇÃO
                     </button>
                 </div>
             </div>
         `;
         
-        this.createParticleSystem();
+        this.createFireParticleSystem();
+    }
+
+    async initializeKhanBot() {
+        // Verifica se está no Khan Academy
+        if (!/^https?:\/\/([a-z0-9-]+\.)?khanacademy\.org/.test(window.location.href)) {
+            this.showNotification('🌐 Redirecionando para Khan Academy...', 'info');
+            setTimeout(() => {
+                window.location.href = "https://pt.khanacademy.org/";
+            }, 2000);
+            return;
+        }
+
+        this.showNotification('🔥 Carregando dependências...', 'info');
+        
+        // Carrega dependências
+        await Promise.all([
+            this.loadScript('https://cdn.jsdelivr.net/npm/darkreader/darkreader.min.js', 'darkReaderPlugin'),
+            this.loadCss('https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css'),
+            this.loadScript('https://cdn.jsdelivr.net/npm/toastify-js', 'toastifyPlugin'),
+        ]);
+
+        // Ativa Dark Reader
+        if (window.DarkReader) {
+            DarkReader.setFetchMethod(window.fetch);
+            DarkReader.enable();
+        }
+
+        await this.delay(1000);
+        
+        // Remove tela de autenticação
+        this.hideAuthSystem();
+        
+        // Inicia automação principal
+        this.setupKhanAutomation();
+        
+        this.sendToast("🔥 Sistema LAW ativado! Automação iniciada.");
+    }
+
+    setupKhanAutomation() {
+        // Event Emitter para mudanças no DOM
+        const plppdo = {
+            events: {},
+            on(event, callback) {
+                (this.events[event] = this.events[event] || []).push(callback);
+            },
+            emit(event, ...args) {
+                this.events[event]?.forEach(callback => callback(...args));
+            }
+        };
+
+        // Observer para mudanças no DOM
+        new MutationObserver(mutationsList => {
+            if (mutationsList.some(m => m.type === 'childList')) {
+                plppdo.emit('domChanged');
+            }
+        }).observe(document.body, { childList: true, subtree: true });
+
+        // Hook no fetch para interceptar requests
+        const originalFetch = window.fetch;
+        window.fetch = async function(input, init) {
+            let body;
+            if (input instanceof Request) {
+                body = await input.clone().text();
+            } else if (init?.body) {
+                body = init.body;
+            }
+
+            // Auto-complete vídeos
+            if (body?.includes('"operationName":"updateUserVideoProgress"')) {
+                try {
+                    let bodyObj = JSON.parse(body);
+                    if (bodyObj.variables?.input) {
+                        const durationSeconds = bodyObj.variables.input.durationSeconds;
+                        bodyObj.variables.input.secondsWatched = durationSeconds;
+                        bodyObj.variables.input.lastSecondWatched = durationSeconds;
+                        body = JSON.stringify(bodyObj);
+
+                        if (input instanceof Request) {
+                            input = new Request(input, { body });
+                        } else {
+                            init.body = body;
+                        }
+
+                        lawSystem.sendToast("🎥 Vídeo concluído automaticamente!", 2000);
+                    }
+                } catch (e) { /* erro ignorado */ }
+            }
+
+            const originalResponse = await originalFetch.apply(this, arguments);
+
+            // Auto-resolver exercícios
+            try {
+                const clonedResponse = originalResponse.clone();
+                const responseBody = await clonedResponse.text();
+                let responseObj = JSON.parse(responseBody);
+
+                if (responseObj?.data?.assessmentItem?.item?.itemData) {
+                    let itemData = JSON.parse(responseObj.data.assessmentItem.item.itemData);
+
+                    if (itemData.question.content[0] === itemData.question.content[0].toUpperCase()) {
+                        itemData.answerArea = {
+                            calculator: false,
+                            chi2Table: false,
+                            periodicTable: false,
+                            tTable: false,
+                            zTable: false
+                        };
+
+                        itemData.question.content = " " + `[[☃ radio 1]]`;
+                        itemData.question.widgets = {
+                            "radio 1": {
+                                type: "radio",
+                                options: {
+                                    choices: [{ content: "✅ Resposta Automática - LAW", correct: true }]
+                                }
+                            }
+                        };
+
+                        responseObj.data.assessmentItem.item.itemData = JSON.stringify(itemData);
+
+                        return new Response(JSON.stringify(responseObj), {
+                            status: originalResponse.status,
+                            statusText: originalResponse.statusText,
+                            headers: originalResponse.headers
+                        });
+                    }
+                }
+            } catch (e) { /* erro ignorado */ }
+
+            return originalResponse;
+        };
+
+        // Auto-clicker para botões
+        (async () => {
+            const selectors = [
+                `[data-testid="choice-icon__library-choice-icon"]`,
+                `[data-testid="exercise-check-answer"]`,
+                `[data-testid="exercise-next-question"]`,
+                `._1udzurba`,
+                `._awve9b`
+            ];
+
+            window.khanwareDominates = true;
+
+            while (window.khanwareDominates) {
+                for (const selector of selectors) {
+                    const element = document.querySelector(selector);
+                    if (element) {
+                        element.click();
+                        
+                        const buttonText = element.querySelector('div')?.innerText;
+                        if (buttonText === "Mostrar resumo") {
+                            this.sendToast("🎉 Exercício concluído!", 3000);
+                        }
+                    }
+                }
+                await this.delay(800);
+            }
+        })();
+
+        console.log("🔥 Sistema LAW - Automação Khan Academy ativa!");
     }
 
     hideAuthSystem() {
         const authContainer = document.getElementById('law-auth-system');
         if (authContainer) {
-            authContainer.style.animation = 'fadeOut 0.5s ease-out forwards';
+            authContainer.style.animation = 'fadeOut 1s ease-out forwards';
             setTimeout(() => {
                 authContainer.remove();
-                console.log('🔓 Sistema LAW - Acesso autorizado');
-                console.log('📊 Carregando funcionalidades...');
-            }, 500);
+            }, 1000);
         }
+    }
+
+    sendToast(text, duration = 5000) {
+        if (window.Toastify) {
+            Toastify({
+                text,
+                duration,
+                gravity: 'top',
+                position: "right",
+                stopOnFocus: true,
+                style: { 
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    borderRadius: "10px",
+                    fontWeight: "bold"
+                }
+            }).showToast();
+        }
+    }
+
+    async loadScript(url, label) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = url;
+            script.onload = () => {
+                this.loadedPlugins.push(label);
+                resolve();
+            };
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    async loadCss(url) {
+        return new Promise((resolve) => {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = url;
+            link.onload = resolve;
+            document.head.appendChild(link);
+        });
     }
 
     showNotification(message, type = 'info') {
@@ -390,10 +625,8 @@ class ProfessionalAuthSystem {
     }
 
     startSecurityMonitoring() {
-        // Monitora tentativas de bypass
         let suspiciousActivity = 0;
         
-        // Detecta tentativas de abertura do console
         setInterval(() => {
             const start = performance.now();
             debugger;
@@ -405,7 +638,7 @@ class ProfessionalAuthSystem {
                     this.showNotification('⚠️ Atividade suspeita detectada!', 'warning');
                 }
             }
-        }, 5000);
+        }, 10000);
     }
 
     delay(ms) {
@@ -425,7 +658,7 @@ class ProfessionalAuthSystem {
             }
 
             .auth-overlay {
-                background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+                background: radial-gradient(circle at 50% 50%, #001122 0%, #000511 70%, #000000 100%);
                 width: 100%;
                 height: 100%;
                 display: flex;
@@ -435,112 +668,118 @@ class ProfessionalAuthSystem {
                 overflow: hidden;
             }
 
-            .particles-container {
+            #fire-canvas {
                 position: absolute;
+                top: 0;
+                left: 0;
                 width: 100%;
                 height: 100%;
-                overflow: hidden;
                 pointer-events: none;
+                z-index: 1;
             }
 
-            .particle {
-                position: absolute;
-                background: rgba(59, 130, 246, 0.3);
-                border-radius: 50%;
-                animation: particleFloat 15s infinite linear;
-            }
-
-            @keyframes particleFloat {
-                from {
-                    transform: translateY(100vh) rotate(0deg);
-                    opacity: 0;
-                }
-                10% { opacity: 1; }
-                90% { opacity: 1; }
-                to {
-                    transform: translateY(-100vh) rotate(360deg);
-                    opacity: 0;
-                }
-            }
-
-            .auth-box {
-                background: rgba(15, 23, 42, 0.95);
+            .auth-box, .success-screen {
+                background: rgba(5, 15, 35, 0.95);
                 backdrop-filter: blur(20px);
-                border: 1px solid rgba(59, 130, 246, 0.3);
+                border: 2px solid rgba(59, 130, 246, 0.4);
                 border-radius: 20px;
                 padding: 40px;
                 width: 100%;
-                max-width: 450px;
+                max-width: 500px;
                 box-shadow: 
-                    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                    0 25px 50px -12px rgba(0, 0, 0, 0.8),
+                    0 0 50px rgba(59, 130, 246, 0.2),
                     inset 0 1px 0 rgba(255, 255, 255, 0.1);
                 position: relative;
+                z-index: 2;
                 transform: translateY(50px);
                 opacity: 0;
-                transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+                transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
             }
 
-            .auth-box.show {
+            .auth-box.show, .success-screen {
                 transform: translateY(0);
                 opacity: 1;
             }
 
             .auth-box.error {
                 animation: shake 0.6s ease-in-out;
-                border-color: rgba(239, 68, 68, 0.5);
+                border-color: rgba(239, 68, 68, 0.6);
+                box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
             }
 
             .auth-box.success {
-                border-color: rgba(34, 197, 94, 0.5);
-                box-shadow: 0 0 30px rgba(34, 197, 94, 0.2);
+                border-color: rgba(34, 197, 94, 0.6);
+                box-shadow: 0 0 50px rgba(34, 197, 94, 0.4);
             }
 
             @keyframes shake {
                 0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-10px); }
-                75% { transform: translateX(10px); }
+                25% { transform: translateX(-15px); }
+                75% { transform: translateX(15px); }
             }
 
             .auth-header {
                 text-align: center;
-                margin-bottom: 30px;
+                margin-bottom: 35px;
             }
 
             .logo-container {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                gap: 10px;
+                gap: 12px;
             }
 
             .logo-icon {
-                font-size: 48px;
-                animation: pulse 2s infinite;
+                font-size: 56px;
+                animation: fireGlow 2s ease-in-out infinite alternate;
             }
 
-            @keyframes pulse {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.1); }
+            @keyframes fireGlow {
+                0% { 
+                    transform: scale(1);
+                    text-shadow: 0 0 20px #ff6600, 0 0 40px #ff6600;
+                }
+                100% { 
+                    transform: scale(1.1);
+                    text-shadow: 0 0 30px #3b82f6, 0 0 60px #3b82f6;
+                }
             }
 
             .auth-title {
                 color: #3b82f6;
-                font-size: 28px;
-                font-weight: 700;
-                letter-spacing: 2px;
-                text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+                font-size: 32px;
+                font-weight: 800;
+                letter-spacing: 3px;
+                text-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
                 margin: 0;
+                background: linear-gradient(135deg, #3b82f6, #06b6d4);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
             }
 
             .auth-subtitle {
                 color: #94a3b8;
                 font-size: 14px;
-                margin: 5px 0 0 0;
+                margin: 8px 0 0 0;
+                font-weight: 500;
+            }
+
+            .version-badge {
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: white;
+                padding: 4px 12px;
+                border-radius: 15px;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.5px;
             }
 
             .input-group {
                 position: relative;
                 margin-bottom: 25px;
+                transition: transform 0.3s ease;
             }
 
             .input-group.focused {
@@ -549,317 +788,58 @@ class ProfessionalAuthSystem {
 
             .input-icon {
                 position: absolute;
-                left: 15px;
+                left: 16px;
                 top: 50%;
                 transform: translateY(-50%);
-                font-size: 18px;
+                font-size: 20px;
                 color: #64748b;
                 z-index: 2;
             }
 
             #auth-password {
                 width: 100%;
-                padding: 15px 50px 15px 50px;
-                background: rgba(30, 41, 59, 0.8);
+                padding: 16px 55px;
+                background: rgba(30, 41, 59, 0.9);
                 border: 2px solid rgba(59, 130, 246, 0.3);
-                border-radius: 12px;
+                border-radius: 15px;
                 color: #f1f5f9;
                 font-size: 16px;
                 outline: none;
                 transition: all 0.3s ease;
+                font-weight: 500;
             }
 
             #auth-password:focus {
                 border-color: #3b82f6;
-                box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+                box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+                background: rgba(30, 41, 59, 1);
             }
 
             .toggle-btn {
                 position: absolute;
-                right: 15px;
+                right: 16px;
                 top: 50%;
                 transform: translateY(-50%);
                 background: none;
                 border: none;
-                font-size: 18px;
+                font-size: 20px;
                 cursor: pointer;
                 color: #64748b;
-                transition: color 0.3s ease;
+                transition: all 0.3s ease;
+                padding: 4px;
+                border-radius: 6px;
             }
 
             .toggle-btn:hover {
                 color: #3b82f6;
+                background: rgba(59, 130, 246, 0.1);
             }
 
             .security-info {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 25px;
-                font-size: 12px;
-                color: #94a3b8;
-            }
-
-            .security-bars {
-                display: flex;
-                gap: 3px;
-                margin: 0 8px;
-            }
-
-            .bar {
-                width: 12px;
-                height: 4px;
-                background: rgba(100, 116, 139, 0.3);
-                border-radius: 2px;
-                transition: background 0.3s ease;
-            }
-
-            .bar.active {
-                background: #22c55e;
-            }
-
-            .auth-button {
-                width: 100%;
-                padding: 15px;
-                background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-                border: none;
-                border-radius: 12px;
-                color: white;
-                font-size: 16px;
-                font-weight: 600;
-                cursor: pointer;
-                position: relative;
-                overflow: hidden;
-                transition: all 0.3s ease;
-                margin-bottom: 20px;
-            }
-
-            .auth-button:hover:not(:disabled) {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
-            }
-
-            .auth-button:disabled {
-                opacity: 0.7;
-                cursor: not-allowed;
-            }
-
-            .auth-button.loading .btn-text {
-                opacity: 0;
-            }
-
-            .auth-button.loading .btn-loader {
-                opacity: 1;
-            }
-
-            .btn-loader {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: 20px;
-                height: 20px;
-                border: 2px solid rgba(255, 255, 255, 0.3);
-                border-top: 2px solid white;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-
-            @keyframes spin {
-                to { transform: translate(-50%, -50%) rotate(360deg); }
-            }
-
-            .auth-footer {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                font-size: 12px;
-                color: #64748b;
-            }
-
-            .status-indicator {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-
-            .status-dot {
-                width: 8px;
-                height: 8px;
-                background: #22c55e;
-                border-radius: 50%;
-                animation: blink 2s infinite;
-            }
-
-            @keyframes blink {
-                0%, 50% { opacity: 1; }
-                51%, 100% { opacity: 0.3; }
-            }
-
-            .notification {
-                position: absolute;
-                top: -60px;
-                left: 0;
-                right: 0;
-                padding: 12px 20px;
-                border-radius: 10px;
-                font-size: 14px;
-                text-align: center;
-                transform: translateY(-20px);
-                opacity: 0;
-                transition: all 0.3s ease;
-            }
-
-            .notification.show {
-                transform: translateY(0);
-                opacity: 1;
-            }
-
-            .notification.success {
-                background: rgba(34, 197, 94, 0.2);
-                border: 1px solid rgba(34, 197, 94, 0.3);
-                color: #22c55e;
-            }
-
-            .notification.error {
-                background: rgba(239, 68, 68, 0.2);
-                border: 1px solid rgba(239, 68, 68, 0.3);
-                color: #ef4444;
-            }
-
-            .notification.warning {
-                background: rgba(245, 158, 11, 0.2);
-                border: 1px solid rgba(245, 158, 11, 0.3);
-                color: #f59e0b;
-            }
-
-            .notification.info {
-                background: rgba(59, 130, 246, 0.2);
-                border: 1px solid rgba(59, 130, 246, 0.3);
-                color: #3b82f6;
-            }
-
-            .success-screen {
-                background: rgba(15, 23, 42, 0.95);
-                backdrop-filter: blur(20px);
-                border: 1px solid rgba(34, 197, 94, 0.3);
-                border-radius: 20px;
-                padding: 40px;
-                text-align: center;
-                color: white;
-                max-width: 450px;
-                width: 100%;
-                animation: successSlide 0.8s ease-out;
-            }
-
-            @keyframes successSlide {
-                from {
-                    opacity: 0;
-                    transform: scale(0.9) translateY(30px);
-                }
-                to {
-                    opacity: 1;
-                    transform: scale(1) translateY(0);
-                }
-            }
-
-            .success-icon {
-                font-size: 64px;
-                margin-bottom: 20px;
-                animation: successPulse 1.5s ease-in-out infinite;
-            }
-
-            @keyframes successPulse {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.1); }
-            }
-
-            .success-screen h2 {
-                color: #22c55e;
-                margin-bottom: 10px;
-                font-size: 24px;
-            }
-
-            .success-screen p {
-                color: #94a3b8;
                 margin-bottom: 30px;
-            }
-
-            .access-info {
-                background: rgba(30, 41, 59, 0.5);
-                border-radius: 12px;
-                padding: 20px;
-                margin-bottom: 30px;
-                text-align: left;
-            }
-
-            .info-item {
-                margin-bottom: 10px;
-                color: #e2e8f0;
-            }
-
-            .info-item strong {
-                color: #3b82f6;
-            }
-
-            .continue-btn {
-                background: linear-gradient(135deg, #22c55e, #16a34a);
-                border: none;
-                border-radius: 12px;
-                padding: 15px 30px;
-                color: white;
-                font-size: 16px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-
-            .continue-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
-            }
-
-            @keyframes fadeOut {
-                to {
-                    opacity: 0;
-                    transform: scale(0.9);
-                }
-            }
-
-            /* Responsividade */
-            @media (max-width: 480px) {
-                .auth-box, .success-screen {
-                    margin: 20px;
-                    padding: 30px 20px;
-                }
-                
-                .auth-title {
-                    font-size: 24px;
-                }
-                
-                .logo-icon {
-                    font-size: 40px;
-                }
-            }
-        `;
-    }
-}
-
-// Inicializa o sistema de autenticação
-const authSystem = new ProfessionalAuthSystem();
-
-// Função para mostrar o sistema (pode ser chamada de outros scripts)
-window.showLAWAuth = () => {
-    if (!document.getElementById('law-auth-system')) {
-        new ProfessionalAuthSystem();
-    }
-};
-
-// Exporta para uso global
-window.authSystem = authSystem;
-
-console.log('🔐 Sistema de Autenticação LAW carregado');
-console.log('💡 Senha padrão: LAW2024@Secure');
-console.log('⚡ Use showLAWAuth() para exibir o sistema');
+                font-size: 13px;
+                color: #94a3b8;
+                font-weight: 500

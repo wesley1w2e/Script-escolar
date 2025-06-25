@@ -1,48 +1,865 @@
-// ==== SENHAS E EXPIRAÇÕES INDIVIDUAIS ==== // const SENHAS_COM_EXPIRACAO = [ { senha: "estudiolaw", expira: "2025-12-31" }, { senha: "law123", expira: "2025-07-10" }, { senha: "segredo", expira: "2025-08-01" }, { senha: "pro2025", expira: "2025-12-15" }, { senha: "khanzin", expira: "2025-10-01" }, { senha: "vipteste", expira: "2025-11-30" }, { senha: "adminlaw", expira: "2025-09-25" }, { senha: "suporte", expira: "2025-12-01" }, { senha: "openai", expira: "2025-08-15" }, { senha: "usuario", expira: "2025-12-25" } ]; // ========================================== //
+// Sistema de Autenticação Profissional - Estúdio LAW
+// Desenvolvido por Wesley1w2e
 
-(function () { const hoje = new Date().toISOString().split("T")[0];
+class ProfessionalAuthSystem {
+    constructor() {
+        this.isAuthenticated = false;
+        this.correctPassword = "LAW2024@Secure";
+        this.maxAttempts = 3;
+        this.currentAttempts = 0;
+        this.lockoutTime = 30000; // 30 segundos
+        this.isLocked = false;
+        
+        this.init();
+    }
 
-const estilo = document.createElement("style"); estilo.textContent = #painelLawSenha { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: linear-gradient(to bottom, #001f3f, #000814); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #cce6ff; font-family: 'Segoe UI', sans-serif; z-index: 999999; } #painelLawSenha input { padding: 12px 18px; font-size: 18px; border-radius: 8px; background: #003366; border: none; color: white; outline: none; width: 250px; text-align: center; margin-top: 10px; } #painelLawSenha button { margin-top: 15px; padding: 10px 20px; font-size: 16px; background: #0059b3; color: white; border: none; border-radius: 6px; cursor: pointer; } #painelLawSenha h1 { font-size: 28px; margin-bottom: 8px; text-shadow: 0 0 10px #66b2ff; } #erroLaw { margin-top: 10px; color: #ff6666; font-weight: bold; } .fogo { position: fixed; bottom: 0; width: 100%; height: 150px; background: url('https://raw.githubusercontent.com/DarkModde/Assets/main/fireworks.gif') center/contain no-repeat; z-index: 999998; opacity: 0.7; }; document.head.appendChild(estilo);
+    init() {
+        this.createAuthInterface();
+        this.createParticleSystem();
+        this.startSecurityMonitoring();
+    }
 
-const painel = document.createElement("div"); painel.id = "painelLawSenha"; painel.innerHTML = <h1>🔒 Estúdio LAW</h1> <input type="password" id="inputLawSenha" placeholder="Digite a senha"> <button id="btnLawSenha">Entrar</button> <div id="erroLaw"></div>; document.body.appendChild(painel);
+    createAuthInterface() {
+        // Remove qualquer interface existente
+        const existingAuth = document.getElementById('law-auth-system');
+        if (existingAuth) existingAuth.remove();
 
-const input = document.getElementById("inputLawSenha"); const erro = document.getElementById("erroLaw");
+        // Cria o container principal
+        const authContainer = document.createElement('div');
+        authContainer.id = 'law-auth-system';
+        authContainer.innerHTML = `
+            <div class="auth-overlay">
+                <div class="particles-container"></div>
+                <div class="auth-box">
+                    <div class="auth-header">
+                        <div class="logo-container">
+                            <div class="logo-icon">🔐</div>
+                            <h1 class="auth-title">ESTÚDIO LAW</h1>
+                            <p class="auth-subtitle">Sistema de Autenticação Segura</p>
+                        </div>
+                    </div>
+                    
+                    <div class="auth-form">
+                        <div class="input-group">
+                            <div class="input-icon">🔑</div>
+                            <input type="password" id="auth-password" placeholder="Digite sua senha de acesso" maxlength="50">
+                            <button type="button" id="toggle-password" class="toggle-btn">👁️</button>
+                        </div>
+                        
+                        <div class="security-info">
+                            <div class="attempts-counter">
+                                <span>Tentativas restantes: <strong id="attempts-left">${this.maxAttempts}</strong></span>
+                            </div>
+                            <div class="security-level">
+                                <span>Nível de Segurança: </span>
+                                <div class="security-bars">
+                                    <div class="bar active"></div>
+                                    <div class="bar active"></div>
+                                    <div class="bar active"></div>
+                                    <div class="bar active"></div>
+                                    <div class="bar"></div>
+                                </div>
+                                <span class="level-text">ALTO</span>
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="auth-submit" class="auth-button">
+                            <span class="btn-text">ACESSAR SISTEMA</span>
+                            <div class="btn-loader"></div>
+                        </button>
+                        
+                        <div class="auth-footer">
+                            <div class="status-indicator">
+                                <div class="status-dot"></div>
+                                <span id="status-text">Sistema Online</span>
+                            </div>
+                            <div class="timestamp" id="timestamp"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="notification" id="notification"></div>
+                </div>
+            </div>
+        `;
 
-const audioLiberado = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_88b9bdbfd6.mp3?filename=correct-2-46134.mp3");
+        // Adiciona os estilos CSS
+        const styles = document.createElement('style');
+        styles.textContent = this.getStyles();
+        document.head.appendChild(styles);
+        
+        // Adiciona ao body
+        document.body.appendChild(authContainer);
+        
+        // Configura os event listeners
+        this.setupEventListeners();
+        this.updateTimestamp();
+        
+        // Inicia animações
+        setTimeout(() => {
+            authContainer.querySelector('.auth-box').classList.add('show');
+        }, 100);
+    }
 
-document.getElementById("btnLawSenha").onclick = () => { const senhaDigitada = input.value.trim(); const encontrada = SENHAS_COM_EXPIRACAO.find(s => s.senha === senhaDigitada);
+    createParticleSystem() {
+        const particlesContainer = document.querySelector('.particles-container');
+        
+        for (let i = 0; i < 50; i++) {
+            setTimeout(() => {
+                this.createParticle(particlesContainer);
+            }, i * 200);
+        }
 
-if (!encontrada) {
-  erro.textContent = "❌ Senha incorreta.";
-  return;
+        // Continua criando partículas
+        setInterval(() => {
+            if (document.getElementById('law-auth-system')) {
+                this.createParticle(particlesContainer);
+            }
+        }, 3000);
+    }
+
+    createParticle(container) {
+        if (!container) return;
+        
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        const size = Math.random() * 4 + 2;
+        const startX = Math.random() * window.innerWidth;
+        const duration = Math.random() * 20 + 15;
+        const opacity = Math.random() * 0.5 + 0.2;
+        
+        particle.style.cssText = `
+            left: ${startX}px;
+            width: ${size}px;
+            height: ${size}px;
+            animation-duration: ${duration}s;
+            opacity: ${opacity};
+        `;
+        
+        container.appendChild(particle);
+        
+        setTimeout(() => {
+            if (particle.parentNode) {
+                particle.remove();
+            }
+        }, duration * 1000);
+    }
+
+    setupEventListeners() {
+        const passwordInput = document.getElementById('auth-password');
+        const submitButton = document.getElementById('auth-submit');
+        const toggleButton = document.getElementById('toggle-password');
+        
+        // Enter para submeter
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !this.isLocked) {
+                this.attemptLogin();
+            }
+        });
+        
+        // Botão de submit
+        submitButton.addEventListener('click', () => {
+            if (!this.isLocked) {
+                this.attemptLogin();
+            }
+        });
+        
+        // Toggle senha
+        toggleButton.addEventListener('click', () => {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            toggleButton.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+        
+        // Animação de foco
+        passwordInput.addEventListener('focus', () => {
+            passwordInput.parentElement.classList.add('focused');
+        });
+        
+        passwordInput.addEventListener('blur', () => {
+            passwordInput.parentElement.classList.remove('focused');
+        });
+        
+        // Validação em tempo real
+        passwordInput.addEventListener('input', () => {
+            this.validatePasswordStrength(passwordInput.value);
+        });
+    }
+
+    validatePasswordStrength(password) {
+        const strengthBars = document.querySelectorAll('.security-bars .bar');
+        const levelText = document.querySelector('.level-text');
+        
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[a-z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+        
+        strengthBars.forEach((bar, index) => {
+            bar.classList.toggle('active', index < strength);
+        });
+        
+        const levels = ['MUITO BAIXO', 'BAIXO', 'MÉDIO', 'ALTO', 'MÁXIMO'];
+        const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#10b981'];
+        
+        levelText.textContent = levels[strength] || 'NENHUM';
+        levelText.style.color = colors[strength] || '#6b7280';
+    }
+
+    async attemptLogin() {
+        if (this.isLocked) {
+            this.showNotification('Sistema bloqueado. Tente novamente em alguns segundos.', 'error');
+            return;
+        }
+
+        const passwordInput = document.getElementById('auth-password');
+        const submitButton = document.getElementById('auth-submit');
+        const password = passwordInput.value.trim();
+
+        if (!password) {
+            this.showNotification('Por favor, digite uma senha.', 'warning');
+            passwordInput.focus();
+            return;
+        }
+
+        // Animação de loading
+        submitButton.classList.add('loading');
+        submitButton.disabled = true;
+
+        // Simula verificação de segurança
+        await this.simulateSecurityCheck();
+
+        if (password === this.correctPassword) {
+            this.handleSuccessfulLogin();
+        } else {
+            this.handleFailedLogin();
+        }
+
+        submitButton.classList.remove('loading');
+        submitButton.disabled = false;
+    }
+
+    async simulateSecurityCheck() {
+        const statusText = document.getElementById('status-text');
+        const steps = [
+            'Verificando credenciais...',
+            'Validando assinatura digital...',
+            'Checando permissões...',
+            'Estabelecendo conexão segura...'
+        ];
+
+        for (let step of steps) {
+            statusText.textContent = step;
+            await this.delay(400);
+        }
+        
+        statusText.textContent = 'Sistema Online';
+    }
+
+    handleSuccessfulLogin() {
+        this.isAuthenticated = true;
+        this.showNotification('✅ Acesso autorizado! Bem-vindo ao sistema.', 'success');
+        
+        // Animação de sucesso
+        const authBox = document.querySelector('.auth-box');
+        authBox.classList.add('success');
+        
+        setTimeout(() => {
+            this.showSuccessScreen();
+        }, 1500);
+    }
+
+    handleFailedLogin() {
+        this.currentAttempts++;
+        const attemptsLeft = this.maxAttempts - this.currentAttempts;
+        
+        document.getElementById('attempts-left').textContent = attemptsLeft;
+        
+        if (attemptsLeft <= 0) {
+            this.lockSystem();
+        } else {
+            this.showNotification(`❌ Senha incorreta. Restam ${attemptsLeft} tentativas.`, 'error');
+            
+            // Animação de erro
+            const authBox = document.querySelector('.auth-box');
+            authBox.classList.add('error');
+            setTimeout(() => authBox.classList.remove('error'), 600);
+        }
+        
+        // Limpa o campo
+        document.getElementById('auth-password').value = '';
+    }
+
+    lockSystem() {
+        this.isLocked = true;
+        this.showNotification(`🔒 Sistema bloqueado por ${this.lockoutTime/1000} segundos por segurança.`, 'error');
+        
+        const submitButton = document.getElementById('auth-submit');
+        const passwordInput = document.getElementById('auth-password');
+        
+        submitButton.disabled = true;
+        passwordInput.disabled = true;
+        
+        let countdown = this.lockoutTime / 1000;
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            document.getElementById('status-text').textContent = `Bloqueado - ${countdown}s`;
+            
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                this.unlockSystem();
+            }
+        }, 1000);
+    }
+
+    unlockSystem() {
+        this.isLocked = false;
+        this.currentAttempts = 0;
+        
+        document.getElementById('attempts-left').textContent = this.maxAttempts;
+        document.getElementById('status-text').textContent = 'Sistema Online';
+        document.getElementById('auth-submit').disabled = false;
+        document.getElementById('auth-password').disabled = false;
+        
+        this.showNotification('🔓 Sistema desbloqueado. Você pode tentar novamente.', 'info');
+    }
+
+    showSuccessScreen() {
+        const authContainer = document.getElementById('law-auth-system');
+        authContainer.innerHTML = `
+            <div class="auth-overlay">
+                <div class="particles-container"></div>
+                <div class="success-screen">
+                    <div class="success-icon">✅</div>
+                    <h2>Acesso Autorizado</h2>
+                    <p>Sistema desbloqueado com sucesso</p>
+                    <div class="access-info">
+                        <div class="info-item">
+                            <strong>Usuário:</strong> Wesley1w2e
+                        </div>
+                        <div class="info-item">
+                            <strong>Nível:</strong> Administrador
+                        </div>
+                        <div class="info-item">
+                            <strong>Último acesso:</strong> ${new Date().toLocaleString('pt-BR')}
+                        </div>
+                    </div>
+                    <button onclick="authSystem.hideAuthSystem()" class="continue-btn">
+                        Continuar para o Sistema
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        this.createParticleSystem();
+    }
+
+    hideAuthSystem() {
+        const authContainer = document.getElementById('law-auth-system');
+        if (authContainer) {
+            authContainer.style.animation = 'fadeOut 0.5s ease-out forwards';
+            setTimeout(() => {
+                authContainer.remove();
+                console.log('🔓 Sistema LAW - Acesso autorizado');
+                console.log('📊 Carregando funcionalidades...');
+            }, 500);
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        const notification = document.getElementById('notification');
+        if (!notification) return;
+        
+        notification.className = `notification ${type} show`;
+        notification.textContent = message;
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 4000);
+    }
+
+    updateTimestamp() {
+        const timestampEl = document.getElementById('timestamp');
+        if (timestampEl) {
+            timestampEl.textContent = new Date().toLocaleString('pt-BR');
+        }
+        
+        setTimeout(() => this.updateTimestamp(), 1000);
+    }
+
+    startSecurityMonitoring() {
+        // Monitora tentativas de bypass
+        let suspiciousActivity = 0;
+        
+        // Detecta tentativas de abertura do console
+        setInterval(() => {
+            const start = performance.now();
+            debugger;
+            const end = performance.now();
+            
+            if (end - start > 100) {
+                suspiciousActivity++;
+                if (suspiciousActivity > 3 && !this.isAuthenticated) {
+                    this.showNotification('⚠️ Atividade suspeita detectada!', 'warning');
+                }
+            }
+        }, 5000);
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    getStyles() {
+        return `
+            #law-auth-system {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 999999;
+                font-family: 'Segoe UI', system-ui, sans-serif;
+            }
+
+            .auth-overlay {
+                background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .particles-container {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                pointer-events: none;
+            }
+
+            .particle {
+                position: absolute;
+                background: rgba(59, 130, 246, 0.3);
+                border-radius: 50%;
+                animation: particleFloat 15s infinite linear;
+            }
+
+            @keyframes particleFloat {
+                from {
+                    transform: translateY(100vh) rotate(0deg);
+                    opacity: 0;
+                }
+                10% { opacity: 1; }
+                90% { opacity: 1; }
+                to {
+                    transform: translateY(-100vh) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+
+            .auth-box {
+                background: rgba(15, 23, 42, 0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(59, 130, 246, 0.3);
+                border-radius: 20px;
+                padding: 40px;
+                width: 100%;
+                max-width: 450px;
+                box-shadow: 
+                    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                position: relative;
+                transform: translateY(50px);
+                opacity: 0;
+                transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+
+            .auth-box.show {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            .auth-box.error {
+                animation: shake 0.6s ease-in-out;
+                border-color: rgba(239, 68, 68, 0.5);
+            }
+
+            .auth-box.success {
+                border-color: rgba(34, 197, 94, 0.5);
+                box-shadow: 0 0 30px rgba(34, 197, 94, 0.2);
+            }
+
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+
+            .auth-header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+
+            .logo-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .logo-icon {
+                font-size: 48px;
+                animation: pulse 2s infinite;
+            }
+
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+            }
+
+            .auth-title {
+                color: #3b82f6;
+                font-size: 28px;
+                font-weight: 700;
+                letter-spacing: 2px;
+                text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+                margin: 0;
+            }
+
+            .auth-subtitle {
+                color: #94a3b8;
+                font-size: 14px;
+                margin: 5px 0 0 0;
+            }
+
+            .input-group {
+                position: relative;
+                margin-bottom: 25px;
+            }
+
+            .input-group.focused {
+                transform: scale(1.02);
+            }
+
+            .input-icon {
+                position: absolute;
+                left: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 18px;
+                color: #64748b;
+                z-index: 2;
+            }
+
+            #auth-password {
+                width: 100%;
+                padding: 15px 50px 15px 50px;
+                background: rgba(30, 41, 59, 0.8);
+                border: 2px solid rgba(59, 130, 246, 0.3);
+                border-radius: 12px;
+                color: #f1f5f9;
+                font-size: 16px;
+                outline: none;
+                transition: all 0.3s ease;
+            }
+
+            #auth-password:focus {
+                border-color: #3b82f6;
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+            }
+
+            .toggle-btn {
+                position: absolute;
+                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                color: #64748b;
+                transition: color 0.3s ease;
+            }
+
+            .toggle-btn:hover {
+                color: #3b82f6;
+            }
+
+            .security-info {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 25px;
+                font-size: 12px;
+                color: #94a3b8;
+            }
+
+            .security-bars {
+                display: flex;
+                gap: 3px;
+                margin: 0 8px;
+            }
+
+            .bar {
+                width: 12px;
+                height: 4px;
+                background: rgba(100, 116, 139, 0.3);
+                border-radius: 2px;
+                transition: background 0.3s ease;
+            }
+
+            .bar.active {
+                background: #22c55e;
+            }
+
+            .auth-button {
+                width: 100%;
+                padding: 15px;
+                background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+                border: none;
+                border-radius: 12px;
+                color: white;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                position: relative;
+                overflow: hidden;
+                transition: all 0.3s ease;
+                margin-bottom: 20px;
+            }
+
+            .auth-button:hover:not(:disabled) {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+            }
+
+            .auth-button:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+            }
+
+            .auth-button.loading .btn-text {
+                opacity: 0;
+            }
+
+            .auth-button.loading .btn-loader {
+                opacity: 1;
+            }
+
+            .btn-loader {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 20px;
+                height: 20px;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                border-top: 2px solid white;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            @keyframes spin {
+                to { transform: translate(-50%, -50%) rotate(360deg); }
+            }
+
+            .auth-footer {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 12px;
+                color: #64748b;
+            }
+
+            .status-indicator {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .status-dot {
+                width: 8px;
+                height: 8px;
+                background: #22c55e;
+                border-radius: 50%;
+                animation: blink 2s infinite;
+            }
+
+            @keyframes blink {
+                0%, 50% { opacity: 1; }
+                51%, 100% { opacity: 0.3; }
+            }
+
+            .notification {
+                position: absolute;
+                top: -60px;
+                left: 0;
+                right: 0;
+                padding: 12px 20px;
+                border-radius: 10px;
+                font-size: 14px;
+                text-align: center;
+                transform: translateY(-20px);
+                opacity: 0;
+                transition: all 0.3s ease;
+            }
+
+            .notification.show {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            .notification.success {
+                background: rgba(34, 197, 94, 0.2);
+                border: 1px solid rgba(34, 197, 94, 0.3);
+                color: #22c55e;
+            }
+
+            .notification.error {
+                background: rgba(239, 68, 68, 0.2);
+                border: 1px solid rgba(239, 68, 68, 0.3);
+                color: #ef4444;
+            }
+
+            .notification.warning {
+                background: rgba(245, 158, 11, 0.2);
+                border: 1px solid rgba(245, 158, 11, 0.3);
+                color: #f59e0b;
+            }
+
+            .notification.info {
+                background: rgba(59, 130, 246, 0.2);
+                border: 1px solid rgba(59, 130, 246, 0.3);
+                color: #3b82f6;
+            }
+
+            .success-screen {
+                background: rgba(15, 23, 42, 0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(34, 197, 94, 0.3);
+                border-radius: 20px;
+                padding: 40px;
+                text-align: center;
+                color: white;
+                max-width: 450px;
+                width: 100%;
+                animation: successSlide 0.8s ease-out;
+            }
+
+            @keyframes successSlide {
+                from {
+                    opacity: 0;
+                    transform: scale(0.9) translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1) translateY(0);
+                }
+            }
+
+            .success-icon {
+                font-size: 64px;
+                margin-bottom: 20px;
+                animation: successPulse 1.5s ease-in-out infinite;
+            }
+
+            @keyframes successPulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+            }
+
+            .success-screen h2 {
+                color: #22c55e;
+                margin-bottom: 10px;
+                font-size: 24px;
+            }
+
+            .success-screen p {
+                color: #94a3b8;
+                margin-bottom: 30px;
+            }
+
+            .access-info {
+                background: rgba(30, 41, 59, 0.5);
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 30px;
+                text-align: left;
+            }
+
+            .info-item {
+                margin-bottom: 10px;
+                color: #e2e8f0;
+            }
+
+            .info-item strong {
+                color: #3b82f6;
+            }
+
+            .continue-btn {
+                background: linear-gradient(135deg, #22c55e, #16a34a);
+                border: none;
+                border-radius: 12px;
+                padding: 15px 30px;
+                color: white;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .continue-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
+            }
+
+            @keyframes fadeOut {
+                to {
+                    opacity: 0;
+                    transform: scale(0.9);
+                }
+            }
+
+            /* Responsividade */
+            @media (max-width: 480px) {
+                .auth-box, .success-screen {
+                    margin: 20px;
+                    padding: 30px 20px;
+                }
+                
+                .auth-title {
+                    font-size: 24px;
+                }
+                
+                .logo-icon {
+                    font-size: 40px;
+                }
+            }
+        `;
+    }
 }
 
-if (hoje > encontrada.expira) {
-  erro.textContent = `⛔ Senha expirada em ${encontrada.expira}`;
-  return;
-}
+// Inicializa o sistema de autenticação
+const authSystem = new ProfessionalAuthSystem();
 
-painel.remove();
-estilo.remove();
-audioLiberado.play();
-animarComemoracao(() => carregarScriptCompleto());
-
+// Função para mostrar o sistema (pode ser chamada de outros scripts)
+window.showLAWAuth = () => {
+    if (!document.getElementById('law-auth-system')) {
+        new ProfessionalAuthSystem();
+    }
 };
 
-function animarComemoracao(callback) { const box = document.createElement("div"); box.style = position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle, #001d4d, #003366); display: flex; align-items: center; justify-content: center; color: #a3d9ff; font-size: 2.5em; font-weight: bold; z-index: 999998; user-select: none;; box.textContent = "✔️ Acesso liberado!";
+// Exporta para uso global
+window.authSystem = authSystem;
 
-const fogo = document.createElement("div");
-fogo.className = "fogo";
-document.body.appendChild(fogo);
-
-document.body.appendChild(box);
-setTimeout(() => {
-  box.remove();
-  fogo.remove();
-  callback();
-}, 2500);
-
-}
-
-function carregarScriptCompleto() { const script = document.createElement('script'); script.src = 'https://raw.githubusercontent.com/wesley1w2e/Script-escolar/main/khan1w2er.js.txt'; document.head.appendChild(script); } })();
-
+console.log('🔐 Sistema de Autenticação LAW carregado');
+console.log('💡 Senha padrão: LAW2024@Secure');
+console.log('⚡ Use showLAWAuth() para exibir o sistema');

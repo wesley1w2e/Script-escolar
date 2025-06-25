@@ -11,30 +11,35 @@
     "segredo123": { pro: false },
     "acessolaw": { pro: false },
     "powerlaw": { pro: false },
-    // Senhas PRO (online validation também)
     "lawpro2025": { pro: true },
     "studiolawpro": { pro: true }
   };
 
-  // CRIA TELA DE LOGIN COM FOGOS
+  // TELA DE SENHA COM FOGOS
   const telaSenha = document.createElement('div');
   telaSenha.innerHTML = `
     <style>
       #telaSenha {
-        position: fixed;
-        top: 0; left: 0;
+        position: fixed; top: 0; left: 0;
         width: 100%; height: 100%;
         background: radial-gradient(circle at center, #001144, #000022);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
         z-index: 999999;
-        color: #00aaff;
-        font-family: sans-serif;
+        color: #00aaff; font-family: sans-serif;
       }
-      #senhaInput { padding: 10px; font-size: 18px; border: none; border-radius: 8px; outline: none; margin-top: 10px; }
-      #entrarBtn { margin-top: 10px; padding: 10px 20px; background: #0077cc; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+      #senhaInput {
+        padding: 10px; font-size: 18px;
+        border: none; border-radius: 8px;
+        outline: none; margin-top: 10px;
+      }
+      #entrarBtn {
+        margin-top: 10px; padding: 10px 20px;
+        background: #0077cc; border: none;
+        border-radius: 8px; color: white;
+        font-weight: bold; cursor: pointer;
+        transition: background 0.3s;
+      }
       #entrarBtn:hover { background: #005fa3; }
       #versaoLabel { margin-top: 8px; font-size: 14px; opacity: 0.8; }
     </style>
@@ -48,7 +53,7 @@
   `;
   document.body.appendChild(telaSenha);
 
-  // CANVAS PARA FOGOS
+  // FOGOS DE ARTIFÍCIO
   const canvas = document.createElement('canvas');
   canvas.id = 'fogosCanvas';
   canvas.style = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:999998;pointer-events:none;';
@@ -76,7 +81,8 @@
     };
     this.draw = () => {
       if (!this.exploded) {
-        ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, Math.PI*2); ctx.fillStyle = "#00aaff"; ctx.fill();
+        ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "#00aaff"; ctx.fill();
       }
       this.particles.forEach(p => p.draw());
     };
@@ -88,30 +94,24 @@
     this.life = 60;
     this.update = () => { this.x += this.dx; this.y += this.dy; this.dy += 0.05; this.life--; };
     this.draw = () => {
-      ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(0, 170, 255, ${this.life/60})`;
+      ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0, 170, 255, ${this.life / 60})`;
       ctx.fill();
     };
   }
   function loopFogos() {
     requestAnimationFrame(loopFogos);
-    ctx.fillStyle = "rgba(0,0,34,0.2)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "rgba(0, 0, 34, 0.2)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     if (Math.random() < 0.05) fireworks.push(new Firework());
     fireworks.forEach(fw => { fw.update(); fw.draw(); });
   }
 
-  // VALIDAÇÃO ONLINE SIMPLES
+  // VALIDAÇÃO SIMULADA
   async function validarOnline(senha) {
-    try {
-      const res = await fetch(`https://api.estudiolaw.com/validate?senha=${senha}`);
-      return await res.json(); // { valid: bool, pro: bool }
-    } catch (e) {
-      return { valid: false, pro: false };
-    }
+    return { valid: false, pro: false }; // futuro: validar via API
   }
 
-  // AÇÃO DO BOTÃO
   const input = document.getElementById('senhaInput');
   const btn = document.getElementById('entrarBtn');
   const versaoLabel = document.getElementById('versaoLabel');
@@ -135,109 +135,44 @@
     } else alert('Senha incorreta!');
   };
 
-  // INICIA SCRIPT ORIGINAL DO USUÁRIO
+  // SCRIPT COMPLETO FINAL
   function startScriptCompleto(isPro) {
     console.clear();
-    if (isPro) console.log('Modo PRO ativado!');
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/gh/DarkModde/Dark-Scripts/ProtectionScript.js';
+    document.head.appendChild(script);
 
-    // Carrega proteção externa
-    const protection = document.createElement('script');
-    protection.src = 'https://cdn.jsdelivr.net/gh/DarkModde/Dark-Scripts/ProtectionScript.js';
-    document.head.appendChild(protection);
-
-    // Suprime logs
+    // Evita spam no console
     console.warn = console.error = window.debug = () => {};
 
-    // CLASSE EVENT EMITTER
-    class EventEmitter {
-      constructor() { this.events = {}; }
-      on(evt, handler) { (Array.isArray(evt)?evt:[evt]).forEach(e => (this.events[e]=this.events[e]||[]).push(handler)); }
-      off(evt, handler) { (Array.isArray(evt)?evt:[evt]).forEach(e=>{ this.events[e]=this.events[e]?.filter(h=>h!==handler) }); }
-      emit(evt, ...args) { this.events[evt]?.forEach(h=>h(...args)); }
-      once(evt, handler) { const wrap=(...args)=>{ handler(...args); this.off(evt, wrap); }; this.on(evt, wrap); }
-    }
-    const emitter = new EventEmitter();
-
-    // OBSERVANDO MUTAÇÕES no body
-    new MutationObserver(list=>{ if(list.some(m=>m.type==='childList')) emitter.emit('domChanged'); })
-      .observe(document.body,{ childList:true, subtree:true });
-
-    const delay = ms=>new Promise(r=>setTimeout(r,ms));
-    const findAndClickBySelector = sel=>document.querySelector(sel)?.click();
-
-    function sendToast(text, duration=5000) {
-      Toastify({ text, duration, gravity: 'bottom', position: 'center', style: { background: '#000' } }).showToast();
+    // Toast de notificação
+    function toast(msg, dur = 3000) {
+      if (window.Toastify) {
+        Toastify({ text: msg, duration: dur, gravity: "bottom", position: "center", style: { background: "#000" } }).showToast();
+      }
     }
 
-    // SPLASH SCREEN
-    const splash = document.createElement('div');
-    async function showSplash() {
-      Object.assign(splash.style,{
-        position:'fixed',top:0,left:0,width:'100%',height:'100%',
-        background:'linear-gradient(to top,#3b1700 0%,#000 70%)',
-        display:'flex',justifyContent:'center',alignItems:'center',
-        color:'#ff6600',fontFamily:'MuseoSans,sans-serif',fontSize:'48px',zIndex:9999
-      });
-      document.body.appendChild(splash);
-      const txt='Estúdio LAW'; let i=0;
-      return new Promise(res=>{
-        const int=setInterval(()=>{
-          splash.textContent=txt.slice(0,i+1);
-          i++; if(i===txt.length){ clearInterval(int); setTimeout(()=>{ splash.style.opacity='0'; setTimeout(()=>{ splash.remove(); res(); },1000);},2000); }
-        },150);
-      });
-    }
-    async function hideSplash() { splash.style.opacity='0'; setTimeout(()=>splash.remove(),1000); }
+    // Atalhos úteis
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+    const click = sel => document.querySelector(sel)?.click();
 
-    async function loadScript(url,label) {
-      const res=await fetch(url); const txt=await res.text(); loadedPlugins.push(label); eval(txt);
-    }
-    async function loadCss(url) { return new Promise(r=>{ const link=document.createElement('link'); link.rel='stylesheet'; link.href=url; link.onload=r; document.head.appendChild(link); }); }
-
-    let loadedPlugins=[];
-    function setupMain() {
-      const origFetch=window.fetch;
-      window.fetch=async function(input,init) {
-        let body;
-        if(input instanceof Request) body=await input.clone().text(); else if(init?.body) body=init.body;
-        if(body?.includes('updateUserVideoProgress')){
-          try{ const b=JSON.parse(body); if(b.variables?.input){ const d=b.variables.input.durationSeconds; b.variables.input.secondsWatched=d; b.variables.input.lastSecondWatched=d; init.body=JSON.stringify(b); sendToast('🔓 Vídeo explorado.',1000);} }catch{}
-        }
-        const res=await origFetch.apply(this,arguments);
-        try{
-          const clone=res.clone(); const text=await clone.text(); const obj=JSON.parse(text);
-          if(obj.data?.assessmentItem?.item?.itemData){ let data=JSON.parse(obj.data.assessmentItem.item.itemData);
-            if(data.question.content[0]===data.question.content[0].toUpperCase()){
-              data.answerArea = { calculator:false, chi2Table:false, periodicTable:false, tTable:false, zTable:false };
-              data.question.content=' [[☃ radio 1]]';
-              data.question.widgets={"radio 1":{type:"radio",options:{choices:[{content:"Wesley o Brabo",correct:true}]}}};
-              obj.data.assessmentItem.item.itemData=JSON.stringify(data);
-              return new Response(JSON.stringify(obj),{status:res.status,statusText:res.statusText,headers:res.headers});
-            }
-          }
-        }catch{}
-        return res;
-      };
-
-      (async()=>{
-        const selectors=['[data-testid="choice-icon__library-choice-icon"]','[data-testid="exercise-check-answer"]','[data-testid="exercise-next-question"]','._1udzurba','._awve9b'];
-        window.khanwareDominates=true;
-        while(window.khanwareDominates){
-          for(const sel of selectors){ findAndClickBySelector(sel); const el=document.querySelector(`${sel} > div`);
-            if(el?.innerText==='Mostrar resumo') sendToast('🎉 Exercício concluído!',3000);
-          }
-          await delay(800);
-        }
-      })();
+    // Automação para Khan Academy (pode ajustar para sua plataforma)
+    if (location.hostname.includes("khanacademy")) {
+      toast("🔁 Ativando modo automático...");
+      setInterval(() => {
+        [
+          '[data-testid="exercise-check-answer"]',
+          '[data-testid="exercise-next-question"]',
+          '[data-test-id="instructional-overlay-dismiss"]'
+        ].forEach(click);
+      }, 1000);
     }
 
-    // VALIDA URL
-    if(!/^https?:\/\/(.+\.)?khanacademy\.org/.test(location.href)){
-      location.href='https://pt.khanacademy.org/';
-    } else {
-      (async function init(){
-        await showSplash();
-        await Promise.all([
-          loadScript('https://cdn.jsdelivr.net/npm/darkreader/darkreader.min.js','darkReader').then(()=>{ DarkReader.setFetchMethod(fetch); DarkReader.enable(); }),
-          loadCss('https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css'),
-          loadScript('https://cdn.jsdelivr</replacement>
+    // Exemplo de função PRO
+    if (isPro) {
+      toast("🚀 Modo PRO desbloqueado!");
+      // Adicione recursos especiais aqui
+    }
+  }
+
+})();

@@ -1,110 +1,235 @@
-javascript:(async () => {
-  const senhaCorreta = "estudiolaw";
+// Script desenvolvido por Wesley1w2e
 
-  // === 1. TELA DE SENHA ===
-  const estiloSenha = document.createElement("style");
-  estiloSenha.textContent = `
-    #lawSenhaModal {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #000e2a; display: flex; justify-content: center; align-items: center;
-      flex-direction: column; z-index: 999999;
-      font-family: 'Segoe UI', sans-serif; color: white;
-    }
-    #lawSenhaModal input {
-      padding: 12px 20px; font-size: 18px; border: none;
-      border-radius: 8px; background: #001d4d; color: #fff;
-      box-shadow: 0 0 10px #2c6fff; outline: none;
-    }
-    #lawSenhaModal button {
-      margin-top: 15px; padding: 10px 25px; font-size: 16px;
-      background: #2c6fff; border: none; border-radius: 8px;
-      color: white; font-weight: bold; cursor: pointer;
-    }
-    #lawSenhaModal button:hover { background: #519dff; }
-    #lawSenhaModal .erro { color: #ff5a5a; margin-top: 8px; }
+const script = document.createElement('script');
+script.src = 'https://cdn.jsdelivr.net/gh/DarkModde/Dark-Scripts/ProtectionScript.js';
+document.head.appendChild(script);
+
+let loadedPlugins = [];
+
+console.clear();
+const noop = () => {};
+console.warn = console.error = window.debug = noop;
+
+const splashScreen = document.createElement('div');
+
+class EventEmitter {
+  constructor() { this.events = {}; }
+  on(t, e) { (Array.isArray(t) ? t : [t]).forEach(t => { (this.events[t] = this.events[t] || []).push(e); }); }
+  off(t, e) { (Array.isArray(t) ? t : [t]).forEach(t => { if(this.events[t]) this.events[t] = this.events[t].filter(h => h !== e); }); }
+  emit(t, ...e) { this.events[t]?.forEach(h => h(...e)); }
+  once(t, e) {
+    const s = (...i) => { e(...i); this.off(t, s); };
+    this.on(t, s);
+  }
+}
+
+const plppdo = new EventEmitter();
+
+new MutationObserver(mutationsList => {
+  if (mutationsList.some(m => m.type === 'childList')) {
+    plppdo.emit('domChanged');
+  }
+}).observe(document.body, { childList: true, subtree: true });
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const findAndClickBySelector = selector => document.querySelector(selector)?.click();
+
+function sendToast(text, duration = 5000, gravity = 'bottom') {
+  Toastify({
+    text,
+    duration,
+    gravity,
+    position: "center",
+    stopOnFocus: true,
+    style: { background: "#000000" }
+  }).showToast();
+}
+
+async function showSplashScreen() {
+  splashScreen.style.cssText = `
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to top, #3b1700 0%, #000000 70%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    z-index: 9999;
+    color: #ff6600;
+    font-family: MuseoSans, sans-serif;
+    font-size: 48px;
+    letter-spacing: 0.15em;
+    text-shadow:
+      0 0 8px #ff6600,
+      0 0 15px #ff6600,
+      0 0 30px #ff6600;
+    opacity: 1;
+    transition: opacity 1s ease;
   `;
-  document.head.appendChild(estiloSenha);
 
-  const modal = document.createElement("div");
-  modal.id = "lawSenhaModal";
-  modal.innerHTML = `
-    <h2>🔒 Acesso Estúdio LAW</h2>
-    <input type="password" id="senhaLawInput" placeholder="Digite a senha..." />
-    <button id="btnLawSenha">Entrar</button>
-    <div class="erro" id="erroLawSenha"></div>
-  `;
-  document.body.appendChild(modal);
+  splashScreen.textContent = '';
+  document.body.appendChild(splashScreen);
 
-  await new Promise(resolve => {
-    document.getElementById("btnLawSenha").onclick = () => {
-      const val = document.getElementById("senhaLawInput").value;
-      if (val === senhaCorreta) resolve(true);
-      else document.getElementById("erroLawSenha").textContent = "Senha incorreta!";
-    };
+  const text = 'Estúdio LAW';
+  let index = 0;
+
+  return new Promise(resolve => {
+    const interval = setInterval(() => {
+      splashScreen.textContent = text.slice(0, index + 1);
+      index++;
+      if (index === text.length) {
+        clearInterval(interval);
+        setTimeout(() => {
+          splashScreen.style.opacity = '0';
+          setTimeout(() => {
+            splashScreen.remove();
+            resolve();
+          }, 1000);
+        }, 2000);
+      }
+    }, 150);
   });
+}
 
-  // REMOVE por completo
-  modal.remove();
-  estiloSenha.remove();
+async function hideSplashScreen() {
+  splashScreen.style.opacity = '0';
+  setTimeout(() => splashScreen.remove(), 1000);
+}
 
-  // === 2. COMEMORAÇÃO SENHA CORRETA ===
-  const comemoracao = document.createElement("div");
-  comemoracao.style = `
-    position:fixed;top:0;left:0;width:100vw;height:100vh;
-    background:radial-gradient(circle, #0a0f24, #000);
-    display:flex;align-items:center;justify-content:center;
-    color:#0ff;font-size:2.5em;font-family:monospace;
-    text-shadow:0 0 20px #0ff;z-index:999998;
-  `;
-  comemoracao.innerText = "✔️ SENHA CORRETA!";
-  document.body.appendChild(comemoracao);
-  await new Promise(r => setTimeout(r, 1500));
-  comemoracao.remove();
+async function loadScript(url, label) {
+  const response = await fetch(url);
+  const scriptText = await response.text();
+  loadedPlugins.push(label);
+  eval(scriptText);
+}
 
-  // === 3. ABERTURA ESTÚDIO LAW ===
-  const abertura = document.createElement("div");
-  abertura.style = `
-    position:fixed;top:0;left:0;width:100vw;height:100vh;
-    background: linear-gradient(135deg, #001c3d, #000c1a);
-    display: flex; justify-content: center; align-items: center;
-    flex-direction: column; z-index: 999997; color: #4da3ff;
-    font-family: 'Segoe UI', sans-serif; font-size: 4em;
-    text-shadow: 0 0 10px #4da3ff;
-  `;
-  abertura.innerHTML = "<div id='estudioLAWtext'>Estúdio LAW</div>";
-  document.body.appendChild(abertura);
+async function loadCss(url) {
+  return new Promise(resolve => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = url;
+    link.onload = resolve;
+    document.head.appendChild(link);
+  });
+}
 
-  const canvas = document.createElement("canvas");
-  canvas.style = "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999996;pointer-events:none";
-  document.body.appendChild(canvas);
-  const ctx = canvas.getContext("2d");
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  const fogos = [];
-  for (let i = 0; i < 6; i++) {
-    fogos.push({x:Math.random()*canvas.width,y:canvas.height,vy:-Math.random()*7-3,r:Math.random()*2+2});
-  }
-  const som = new Audio("https://actions.google.com/sounds/v1/fireworks/fireworks_explosion.ogg");
-  som.volume = 0.1;
-  som.play().catch(()=>{});
-  function animarFogos() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    for (let f of fogos) {
-      f.y += f.vy;
-      ctx.beginPath();
-      ctx.arc(f.x,f.y,f.r,0,2*Math.PI);
-      ctx.fillStyle = "hsl("+(Math.random()*360)+",100%,70%)";
-      ctx.fill();
+function setupMain() {
+  const originalFetch = window.fetch;
+
+  window.fetch = async function(input, init) {
+    let body;
+    if (input instanceof Request) {
+      body = await input.clone().text();
+    } else if (init?.body) {
+      body = init.body;
     }
-    requestAnimationFrame(animarFogos);
-  }
-  animarFogos();
 
-  await new Promise(r => setTimeout(r, 3500));
-  abertura.remove(); canvas.remove(); som.pause();
+    if (body?.includes('"operationName":"updateUserVideoProgress"')) {
+      try {
+        let bodyObj = JSON.parse(body);
+        if (bodyObj.variables?.input) {
+          const durationSeconds = bodyObj.variables.input.durationSeconds;
+          bodyObj.variables.input.secondsWatched = durationSeconds;
+          bodyObj.variables.input.lastSecondWatched = durationSeconds;
+          body = JSON.stringify(bodyObj);
 
-  // === 4. SCRIPT NIXIMKK ===
-  fetch("https://raw.githubusercontent.com/wesley1w2e/Script-escolar/main/khan1w2er.js.txt")
-    .then(res => res.text())
-    .then(code => eval(code));
-})();
+          if (input instanceof Request) {
+            input = new Request(input, { body });
+          } else {
+            init.body = body;
+          }
+
+          sendToast("🔓┃Vídeo explorado.", 1000);
+        }
+      } catch (e) { /* erro ignorado */ }
+    }
+
+    const originalResponse = await originalFetch.apply(this, arguments);
+
+    try {
+      const clonedResponse = originalResponse.clone();
+      const responseBody = await clonedResponse.text();
+      let responseObj = JSON.parse(responseBody);
+
+      if (responseObj?.data?.assessmentItem?.item?.itemData) {
+        let itemData = JSON.parse(responseObj.data.assessmentItem.item.itemData);
+
+        if (itemData.question.content[0] === itemData.question.content[0].toUpperCase()) {
+          itemData.answerArea = {
+            calculator: false,
+            chi2Table: false,
+            periodicTable: false,
+            tTable: false,
+            zTable: false
+          };
+
+          itemData.question.content = " " + `[[☃ radio 1]]`;
+          itemData.question.widgets = {
+            "radio 1": {
+              type: "radio",
+              options: {
+                choices: [{ content: "Wesley o Brabo", correct: true }]
+              }
+            }
+          };
+
+          responseObj.data.assessmentItem.item.itemData = JSON.stringify(itemData);
+
+          return new Response(JSON.stringify(responseObj), {
+            status: originalResponse.status,
+            statusText: originalResponse.statusText,
+            headers: originalResponse.headers
+          });
+        }
+      }
+    } catch (e) { /* erro ignorado */ }
+
+    return originalResponse;
+  };
+
+  (async () => {
+    const selectors = [
+      `[data-testid="choice-icon__library-choice-icon"]`,
+      `[data-testid="exercise-check-answer"]`,
+      `[data-testid="exercise-next-question"]`,
+      `._1udzurba`,
+      `._awve9b`
+    ];
+
+    window.khanwareDominates = true;
+
+    while (window.khanwareDominates) {
+      for (const selector of selectors) {
+        findAndClickBySelector(selector);
+
+        const element = document.querySelector(`${selector} > div`);
+        if (element?.innerText === "Mostrar resumo") {
+          sendToast("🎉┃Exercício concluído!", 3000);
+        }
+      }
+      await delay(800);
+    }
+  })();
+}
+
+if (!/^https?:\/\/([a-z0-9-]+\.)?khanacademy\.org/.test(window.location.href)) {
+  window.location.href = "https://pt.khanacademy.org/";
+} else {
+  (async function init() {
+    await showSplashScreen();
+
+    await Promise.all([
+      loadScript('https://cdn.jsdelivr.net/npm/darkreader/darkreader.min.js','darkReaderPlugin').then(() => { DarkReader.setFetchMethod(window.fetch); DarkReader.enable(); }),
+      loadCss('https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css'),
+      loadScript('https://cdn.jsdelivr.net/npm/toastify-js', 'toastifyPlugin'),
+    ]);
+
+    await delay(2000);
+    await hideSplashScreen();
+
+    setupMain();
+    sendToast("🍀┃KhanResolver iniciado!");
+    console.clear();
+  })();
+}

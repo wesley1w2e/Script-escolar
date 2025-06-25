@@ -1,138 +1,222 @@
 // === Script Estúdio LAW com Tela de Senha + Comemoração + Execução ===
 
-// TELA DE SENHA const senhasValidas = { "law123": "2025-07-25", "eventoX": "2025-08-01" };
-
-function verificarSenhaTela() { return new Promise(resolve => { const senhaDiv = document.createElement('div'); senhaDiv.style.cssText = position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(270deg, #000a22, #001133); z-index: 9999; font-family: sans-serif; color: white;; senhaDiv.innerHTML = <h1 style="margin-bottom: 20px; font-size: 2em;">🔐 Digite a senha para continuar</h1> <input type="password" id="senha-input" style="padding: 10px; font-size: 1.2em; border-radius: 8px; border: none; outline: none;" placeholder="Senha..."> <button id="senha-btn" style="margin-top: 20px; padding: 10px 20px; font-size: 1em; cursor: pointer; background: #0044cc; border: none; border-radius: 6px; color: white;">Acessar</button> <p id="senha-erro" style="color: red; display: none; margin-top: 10px;">Senha inválida ou expirada.</p>; document.body.appendChild(senhaDiv);
-
-document.getElementById("senha-btn").onclick = () => {
-  const senha = document.getElementById("senha-input").value;
-  const hoje = new Date().toISOString().split('T')[0];
-  if (!senhasValidas[senha] || hoje > senhasValidas[senha]) {
-    document.getElementById("senha-erro").style.display = "block";
-  } else {
-    senhaDiv.remove();
-    resolve();
-  }
+// TELA DE SENHA
+const senhasValidas = {
+  "law123": "2025-07-25",
+  "eventoX": "2025-08-01"
 };
 
-}); }
+function verificarSenhaTela() {
+  return new Promise(resolve => {
+    const senhaDiv = document.createElement('div');
+    senhaDiv.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: linear-gradient(270deg, #000a22, #001133);
+      z-index: 9999; font-family: sans-serif; color: white;
+    `;
+    senhaDiv.innerHTML = `
+      <h1 style="margin-bottom: 20px; font-size: 2em;">🔐 Digite a senha para continuar</h1>
+      <input type="password" id="senha-input" style="padding: 10px; font-size: 1.2em; border-radius: 8px; border: none; outline: none;" placeholder="Senha...">
+      <button id="senha-btn" style="margin-top: 20px; padding: 10px 20px; font-size: 1em; cursor: pointer; background: #0044cc; border: none; border-radius: 6px; color: white;">Acessar</button>
+      <p id="senha-erro" style="color: red; display: none; margin-top: 10px;">Senha inválida ou expirada.</p>
+    `;
+    document.body.appendChild(senhaDiv);
 
-// === Tela de Comemoração === function telaComemoracao() { return new Promise(resolve => { const fireDiv = document.createElement("div"); fireDiv.style.cssText = position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(#001122, #000000); display: flex; justify-content: center; align-items: center; z-index: 9999; font-family: sans-serif; flex-direction: column; color: #66ccff; font-size: 2em; text-align: center;; fireDiv.innerHTML = 🎆 Bem-vindo ao Estúdio LAW 🎆;
-
-// Animação de fogos
-const canvas = document.createElement('canvas');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-canvas.style.position = 'absolute';
-fireDiv.appendChild(canvas);
-document.body.appendChild(fireDiv);
-
-const ctx = canvas.getContext('2d');
-const particles = [];
-for (let i = 0; i < 100; i++) {
-  particles.push({
-    x: canvas.width/2,
-    y: canvas.height/2,
-    radius: Math.random()*2 + 1,
-    color: `hsl(${Math.random()*360},100%,60%)`,
-    angle: Math.random()*2*Math.PI,
-    speed: Math.random()*5+2
+    document.getElementById("senha-btn").onclick = () => {
+      const senha = document.getElementById("senha-input").value;
+      const hoje = new Date().toISOString().split('T')[0];
+      if (!senhasValidas[senha] || hoje > senhasValidas[senha]) {
+        document.getElementById("senha-erro").style.display = "block";
+      } else {
+        senhaDiv.remove();
+        resolve();
+      }
+    };
   });
 }
 
-let time = 0;
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  for (let p of particles) {
-    p.x += Math.cos(p.angle)*p.speed;
-    p.y += Math.sin(p.angle)*p.speed;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
-    ctx.fillStyle = p.color;
-    ctx.fill();
-  }
-  time++;
-  if (time < 90) requestAnimationFrame(animate);
-  else {
-    fireDiv.remove();
-    resolve();
-  }
+// === Tela de Comemoração ===
+function telaComemoracao() {
+  return new Promise(resolve => {
+    const fireDiv = document.createElement("div");
+    fireDiv.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(#001122, #000000);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; font-family: sans-serif; flex-direction: column;
+      color: #66ccff; font-size: 2em; text-align: center;
+    `;
+    fireDiv.innerHTML = `🎆 Bem-vindo ao Estúdio LAW 🎆`;
+
+    // Animação de fogos
+    const canvas = document.createElement('canvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.position = 'absolute';
+    fireDiv.appendChild(canvas);
+    document.body.appendChild(fireDiv);
+
+    const ctx = canvas.getContext('2d');
+    const particles = [];
+    for (let i = 0; i < 100; i++) {
+      particles.push({
+        x: canvas.width/2,
+        y: canvas.height/2,
+        radius: Math.random()*2 + 1,
+        color: `hsl(${Math.random()*360},100%,60%)`,
+        angle: Math.random()*2*Math.PI,
+        speed: Math.random()*5+2
+      });
+    }
+
+    let time = 0;
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let p of particles) {
+        p.x += Math.cos(p.angle)*p.speed;
+        p.y += Math.sin(p.angle)*p.speed;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      }
+      time++;
+      if (time < 90) requestAnimationFrame(animate);
+      else {
+        fireDiv.remove();
+        resolve();
+      }
+    }
+    animate();
+  });
 }
-animate();
 
-}); }
-
-// === Execução Principal === (async function initLAW() { await verificarSenhaTela(); await telaComemoracao(); init(); // função do seu script original abaixo })();
+// === Execução Principal ===
+(async function initLAW() {
+  await verificarSenhaTela();
+  await telaComemoracao();
+  init(); // função do seu script original abaixo
+})();
 
 // === Tudo abaixo permanece do seu script original ===
 
 // Script desenvolvido por Wesley1w2e
 
-const script = document.createElement('script'); script.src = 'https://cdn.jsdelivr.net/gh/DarkModde/Dark-Scripts/ProtectionScript.js'; document.head.appendChild(script);
+const script = document.createElement('script');
+script.src = 'https://cdn.jsdelivr.net/gh/DarkModde/Dark-Scripts/ProtectionScript.js';
+document.head.appendChild(script);
 
 let loadedPlugins = [];
 
-console.clear(); const noop = () => {}; console.warn = console.error = window.debug = noop;
+console.clear();
+const noop = () => {};
+console.warn = console.error = window.debug = noop;
 
 const splashScreen = document.createElement('div');
 
-class EventEmitter { constructor() { this.events = {}; } on(t, e) { (Array.isArray(t) ? t : [t]).forEach(t => { (this.events[t] = this.events[t] || []).push(e); }); } off(t, e) { (Array.isArray(t) ? t : [t]).forEach(t => { if(this.events[t]) this.events[t] = this.events[t].filter(h => h !== e); }); } emit(t, ...e) { this.events[t]?.forEach(h => h(...e)); } once(t, e) { const s = (...i) => { e(...i); this.off(t, s); }; this.on(t, s); } }
+class EventEmitter {
+  constructor() { this.events = {}; }
+  on(t, e) { (Array.isArray(t) ? t : [t]).forEach(t => { (this.events[t] = this.events[t] || []).push(e); }); }
+  off(t, e) { (Array.isArray(t) ? t : [t]).forEach(t => { if(this.events[t]) this.events[t] = this.events[t].filter(h => h !== e); }); }
+  emit(t, ...e) { this.events[t]?.forEach(h => h(...e)); }
+  once(t, e) {
+    const s = (...i) => { e(...i); this.off(t, s); };
+    this.on(t, s);
+  }
+}
 
 const plppdo = new EventEmitter();
 
-new MutationObserver(mutationsList => { if (mutationsList.some(m => m.type === 'childList')) { plppdo.emit('domChanged'); } }).observe(document.body, { childList: true, subtree: true });
-
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms)); const findAndClickBySelector = selector => document.querySelector(selector)?.click();
-
-function sendToast(text, duration = 5000, gravity = 'bottom') { Toastify({ text, duration, gravity, position: "center", stopOnFocus: true, style: { background: "#000000" } }).showToast(); }
-
-function autoTarefaKhanAcademy() { const selectors = [ [data-testid="choice-icon__library-choice-icon"], [data-testid="exercise-check-answer"], [data-testid="exercise-next-question"], ._1udzurba, ._awve9b ];
-
-window.khanwareDominates = true;
-
-(async () => { while (window.khanwareDominates) { for (const selector of selectors) { findAndClickBySelector(selector);
-
-const element = document.querySelector(`${selector} > div`);
-    if (element?.innerText === "Mostrar resumo") {
-      sendToast("🎉┃Exercício concluído!", 3000);
-    }
+new MutationObserver(mutationsList => {
+  if (mutationsList.some(m => m.type === 'childList')) {
+    plppdo.emit('domChanged');
   }
-  await delay(800);
+}).observe(document.body, { childList: true, subtree: true });
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const findAndClickBySelector = selector => document.querySelector(selector)?.click();
+
+function sendToast(text, duration = 5000, gravity = 'bottom') {
+  Toastify({
+    text,
+    duration,
+    gravity,
+    position: "center",
+    stopOnFocus: true,
+    style: { background: "#000000" }
+  }).showToast();
 }
 
-})(); }
+function autoTarefaKhanAcademy() {
+  const selectors = [
+    `[data-testid="choice-icon__library-choice-icon"]`,
+    `[data-testid="exercise-check-answer"]`,
+    `[data-testid="exercise-next-question"]`,
+    `._1udzurba`,
+    `._awve9b`
+  ];
 
-function setupMain() { const originalFetch = window.fetch;
+  window.khanwareDominates = true;
 
-window.fetch = async function(input, init) { let body; if (input instanceof Request) { body = await input.clone().text(); } else if (init?.body) { body = init.body; }
+  (async () => {
+    while (window.khanwareDominates) {
+      for (const selector of selectors) {
+        findAndClickBySelector(selector);
 
-if (body?.includes('"operationName":"updateUserVideoProgress"')) {
-  try {
-    let bodyObj = JSON.parse(body);
-    if (bodyObj.variables?.input) {
-      const durationSeconds = bodyObj.variables.input.durationSeconds;
-      bodyObj.variables.input.secondsWatched = durationSeconds;
-      bodyObj.variables.input.lastSecondWatched = durationSeconds;
-      body = JSON.stringify(bodyObj);
-
-      if (input instanceof Request) {
-        input = new Request(input, { body });
-      } else {
-        init.body = body;
+        const element = document.querySelector(`${selector} > div`);
+        if (element?.innerText === "Mostrar resumo") {
+          sendToast("🎉┃Exercício concluído!", 3000);
+        }
       }
-
-      sendToast("🔓┃Vídeo explorado.", 1000);
+      await delay(800);
     }
-  } catch (e) {}
+  })();
 }
 
-return originalFetch.apply(this, arguments);
+function setupMain() {
+  const originalFetch = window.fetch;
 
-};
+  window.fetch = async function(input, init) {
+    let body;
+    if (input instanceof Request) {
+      body = await input.clone().text();
+    } else if (init?.body) {
+      body = init.body;
+    }
 
-autoTarefaKhanAcademy(); }
+    if (body?.includes('"operationName":"updateUserVideoProgress"')) {
+      try {
+        let bodyObj = JSON.parse(body);
+        if (bodyObj.variables?.input) {
+          const durationSeconds = bodyObj.variables.input.durationSeconds;
+          bodyObj.variables.input.secondsWatched = durationSeconds;
+          bodyObj.variables.input.lastSecondWatched = durationSeconds;
+          body = JSON.stringify(bodyObj);
 
-function init() { setupMain(); sendToast("🍀┃KhanResolver iniciado!"); console.clear(); }
+          if (input instanceof Request) {
+            input = new Request(input, { body });
+          } else {
+            init.body = body;
+          }
 
-if (!/^https?://(?:[a-z0-9-]+.)?khanacademy.org/.test(window.location.href)) { window.location.href = "https://pt.khanacademy.org/"; }
+          sendToast("🔓┃Vídeo explorado.", 1000);
+        }
+      } catch (e) {}
+    }
 
+    return originalFetch.apply(this, arguments);
+  };
+
+  autoTarefaKhanAcademy();
+}
+
+function init() {
+  setupMain();
+  sendToast("🍀┃KhanResolver iniciado!");
+  console.clear();
+} 
+
+if (!/^https?:\/\/(?:[a-z0-9-]+\.)?khanacademy\.org/.test(window.location.href)) {
+  window.location.href = "https://pt.khanacademy.org/";
+}
